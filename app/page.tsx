@@ -1,459 +1,360 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import {
-  BadgeCheck,
-  Bell,
-  BriefcaseBusiness,
-  Building2,
-  CarFront,
-  CheckCheck,
-  CircleHelp,
-  Compass,
-  GraduationCap,
-  Hash,
-  Heart,
-  Home,
-  Image as ImageIcon,
-  Landmark,
-  MapPin,
-  MessageCircle,
-  MessageSquare,
-  MoreHorizontal,
-  Paperclip,
-  PenLine,
-  Phone,
-  Plus,
-  Radio,
-  Repeat2,
-  Search,
-  Send,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  Stethoscope,
-  UsersRound,
-  Video,
-} from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Dialog, DropdownMenu, Popover } from "radix-ui";
+import { Archive, ArrowLeft, BellOff, Bookmark, Check, ChevronDown, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Palette, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Settings, Shield, Smile, Trash2, UsersRound, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { contacts, createDemoState, localize, MAX_ATTACHMENT_BYTES, MAX_MESSAGE_LENGTH, MAX_SESSION_ATTACHMENT_BYTES, messengerReducer, selectThreads, type Attachment, type Filter, type Locale, type Message, type Thread } from "@/lib/messenger";
+import { messengerCopy, type MessengerCopy } from "@/lib/messenger-copy";
 
-type View = "feed" | "chats" | "communities" | "services";
-type Language = "kz" | "ru";
+type View = "chats" | "updates" | "calls" | "settings";
+type Modal = "new" | "about" | "call" | "voice" | "info" | "status" | "view-status" | null;
+type Draft = { text: string; replyTo?: string; editing?: string; attachment?: Attachment };
+const emptyDraft: Draft = { text: "" };
+const clock = (at: string) => new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Almaty" }).format(new Date(at));
+const uid = () => crypto.randomUUID();
 
-type Post = {
-  id: number;
-  author: string;
-  handle: string;
-  initials: string;
-  tone: string;
-  time: string;
-  location?: string;
-  verified?: boolean;
-  text: string;
-  topic: string;
-  likes: number;
-  comments: number;
-  shares: number;
-};
+function Avatar({ chat, small = false }: { chat: Pick<Thread, "initials" | "color" | "kind">; small?: boolean }) {
+  const Icon = chat.kind === "group" ? UsersRound : chat.kind === "saved" ? Bookmark : chat.kind === "channel" ? Megaphone : null;
+  return <span aria-hidden="true" className={cn("avatar", small && "small")} style={{ background: chat.color }}>{Icon ? <Icon /> : chat.initials}</span>;
+}
 
-type Chat = {
-  id: number;
-  name: string;
-  initials: string;
-  tone: string;
-  preview: string;
-  time: string;
-  unread?: number;
-  online?: boolean;
-  verified?: boolean;
-};
+function MenuItem({ children, action, danger = false }: { children: ReactNode; action: () => void; danger?: boolean }) {
+  return <DropdownMenu.Item className={cn("menu-item", danger && "danger")} onSelect={action}>{children}</DropdownMenu.Item>;
+}
 
-type Message = {
-  id: number;
-  mine: boolean;
-  text: string;
-  time: string;
-};
-
-const copy = {
-  kz: {
-    home: "Басты бет",
-    chats: "Чаттар",
-    communities: "Қауымдар",
-    services: "Қызметтер",
-    search: "Адамдар, қауымдар және жаңалықтар",
-    feed: "Сіздің лентаңыз",
-    city: "Талдықорған",
-    compose: "Не жаңалық, Жанибек?",
-    publish: "Жариялау",
-    cancel: "Бас тарту",
-    all: "Барлығы",
-    local: "Менің қалам",
-    business: "Бизнес",
-    technology: "Технология",
-    suggestions: "Сізге қызық болуы мүмкін",
-    popular: "Танымал тақырыптар",
-    seeAll: "Барлығын көру",
-    messages: "Хабарламалар",
-    chatSearch: "Чатты іздеу",
-    messagePlaceholder: "Хабарлама жазыңыз...",
-    communityTitle: "Өз ортаңызды табыңыз",
-    communityIntro: "Қала, қызығушылық және кәсіп бойынша тірі қауымдар.",
-    joined: "Қосылдым",
-    join: "Қосылу",
-    serviceTitle: "Күнделікті қызметтер",
-    serviceIntro: "Тексерілген жергілікті мамандар мен ұйымдар — бір жерде.",
-    newPost: "Жаңа жазба",
-    postPlaceholder: "Ойыңызды жазыңыз...",
-    photo: "Фото",
-    topic: "Тақырып",
-  },
-  ru: {
-    home: "Главная",
-    chats: "Чаты",
-    communities: "Сообщества",
-    services: "Сервисы",
-    search: "Люди, сообщества и новости",
-    feed: "Ваша лента",
-    city: "Талдыкорган",
-    compose: "Что нового, Жанибек?",
-    publish: "Опубликовать",
-    cancel: "Отмена",
-    all: "Всё",
-    local: "Мой город",
-    business: "Бизнес",
-    technology: "Технологии",
-    suggestions: "Может быть интересно",
-    popular: "Популярные темы",
-    seeAll: "Смотреть всё",
-    messages: "Сообщения",
-    chatSearch: "Поиск чатов",
-    messagePlaceholder: "Напишите сообщение...",
-    communityTitle: "Найдите своё сообщество",
-    communityIntro: "Живые сообщества по городу, интересам и профессии.",
-    joined: "Вы вступили",
-    join: "Вступить",
-    serviceTitle: "Сервисы на каждый день",
-    serviceIntro: "Проверенные местные специалисты и организации — в одном месте.",
-    newPost: "Новая публикация",
-    postPlaceholder: "Поделитесь мыслью...",
-    photo: "Фото",
-    topic: "Тема",
-  },
-};
-
-const initialPosts: Post[] = [
-  {
-    id: 1,
-    author: "Айдана Сәрсен",
-    handle: "@aidana.s",
-    initials: "АС",
-    tone: "from-[#08A89D] to-[#006E7A]",
-    time: "12 мин",
-    location: "Алматы",
-    verified: true,
-    topic: "#қала",
-    text: "Алматыда сенбі күні жас кәсіпкерлердің ашық кездесуі өтеді. Тәжірибе, серіктес және нақты байланыс іздегендерге пайдалы болады. Кім барады?",
-    likes: 284,
-    comments: 37,
-    shares: 18,
-  },
-  {
-    id: 2,
-    author: "Qazaq Tech",
-    handle: "@qazaqtech",
-    initials: "QT",
-    tone: "from-[#7761FF] to-[#4537C8]",
-    time: "41 мин",
-    topic: "#технология",
-    verified: true,
-    text: "Қазақстандық әзірлеушілерге арналған жаңа грант бағдарламасының өтінімдері ашылды. Командада кемінде екі адам болуы керек, алғашқы өнімнің прототипі жеткілікті.",
-    likes: 916,
-    comments: 104,
-    shares: 221,
-  },
-  {
-    id: 3,
-    author: "Нұржан Әлиев",
-    handle: "@nurzhankz",
-    initials: "НА",
-    tone: "from-[#E29B3B] to-[#B96320]",
-    time: "1 сағ",
-    location: "Астана",
-    topic: "#бизнес",
-    text: "Шағын бизнеске ең керегі — көп кеңес емес, алғашқы 10 тұрақты клиент. Осы аптада жергілікті кәсіпкерлерге сату процесін тегін талдап беремін.",
-    likes: 153,
-    comments: 29,
-    shares: 11,
-  },
-];
-
-const chats: Chat[] = [
-  { id: 1, name: "Айдана", initials: "А", tone: "bg-[#E75480]", preview: "Жақсы, кешке сөйлесеміз", time: "10:42", unread: 2, online: true },
-  { id: 2, name: "Qazyna командасы", initials: "Q", tone: "bg-[#00A99D]", preview: "Дизайн нұсқасын жібердім", time: "09:18", verified: true },
-  { id: 3, name: "Бизнес Талдықорған", initials: "БТ", tone: "bg-[#7357D9]", preview: "Асқар: Кездесу қай жерде?", time: "кеше", unread: 5 },
-  { id: 4, name: "Данияр К.", initials: "ДК", tone: "bg-[#D9842B]", preview: "Рақмет!", time: "сс", online: true },
-  { id: 5, name: "Отбасы", initials: "О", tone: "bg-[#3976C8]", preview: "Фото", time: "дс" },
-];
-
-const initialMessages: Record<number, Message[]> = {
-  1: [
-    { id: 1, mine: false, text: "Сәлем! Бүгін орталыққа барасың ба?", time: "10:31" },
-    { id: 2, mine: true, text: "Сәлем! Иә, түстен кейін барамын.", time: "10:35" },
-    { id: 3, mine: false, text: "Жақсы, кешке сөйлесеміз", time: "10:42" },
-  ],
-  2: [
-    { id: 1, mine: false, text: "Басты экранның жаңа дизайны дайын.", time: "09:12" },
-    { id: 2, mine: false, text: "Дизайн нұсқасын жібердім", time: "09:18" },
-  ],
-  3: [{ id: 1, mine: false, text: "Кездесу қай жерде?", time: "кеше" }],
-  4: [{ id: 1, mine: false, text: "Рақмет!", time: "сс" }],
-  5: [{ id: 1, mine: false, text: "Демалыста түскен фото", time: "дс" }],
-};
-
-const communities = [
-  { id: 1, name: "Алматы бүгін", description: "Қала жаңалықтары, орындар, оқиғалар", members: "128 мың", initials: "AL", tone: "from-[#15A7A0] to-[#05747F]", tag: "Қала" },
-  { id: 2, name: "Қазақстан кәсіпкерлері", description: "Тәжірибе, серіктестік және өсу", members: "84 мың", initials: "KZ", tone: "from-[#7357D9] to-[#4A369A]", tag: "Бизнес" },
-  { id: 3, name: "Ата-аналар ортасы", description: "Балалар, оқу және пайдалы кеңестер", members: "61 мың", initials: "AO", tone: "from-[#E98D45] to-[#BC592F]", tag: "Отбасы" },
-  { id: 4, name: "Qazaq Developers", description: "Код, өнім және бос жұмыс орындары", members: "39 мың", initials: "QD", tone: "from-[#2A7AD7] to-[#2450A3]", tag: "IT" },
-];
-
-const services = [
-  { name: "Дәрігерлер", description: "Қабылдауға жазылу", icon: Stethoscope, color: "bg-[#DDF7F4] text-[#087E76]" },
-  { name: "Білім", description: "Курстар мен мұғалімдер", icon: GraduationCap, color: "bg-[#EAE5FF] text-[#664CC4]" },
-  { name: "Жұмыс", description: "Жергілікті вакансиялар", icon: BriefcaseBusiness, color: "bg-[#FFF0D9] text-[#A45B12]" },
-  { name: "Көлік", description: "Шеберлер мен қызметтер", icon: CarFront, color: "bg-[#E1ECFF] text-[#2C68B8]" },
-  { name: "Мемқызметтер", description: "Қажетті сілтемелер", icon: Landmark, color: "bg-[#E3F3E7] text-[#2E7C45]" },
-  { name: "Компаниялар", description: "Тексерілген бизнес", icon: Building2, color: "bg-[#FDE8EF] text-[#B7426D]" },
-];
-
-function Avatar({ initials, tone, size = "md", online = false }: { initials: string; tone: string; size?: "sm" | "md" | "lg"; online?: boolean }) {
-  return (
-    <span className={cn("relative inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-sm", tone, size === "sm" && "h-9 w-9 text-xs", size === "md" && "h-11 w-11 text-sm", size === "lg" && "h-14 w-14 text-base")}>
-      {initials}
-      {online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-[#27C76F]" />}
-    </span>
-  );
+function ChatMenu({ chat, t, act }: { chat: Thread; t: MessengerCopy; act: (type: "pin" | "mute" | "archive") => void }) {
+  return <DropdownMenu.Root>
+    <DropdownMenu.Trigger asChild><Button variant="ghost" size="icon" className="icon-button" aria-label={t.more}><MoreVertical /></Button></DropdownMenu.Trigger>
+    <DropdownMenu.Portal><DropdownMenu.Content className="context-menu" align="end" sideOffset={6}>
+      <MenuItem action={() => act("pin")}><Pin />{chat.pinned ? t.unpin : t.pin}</MenuItem>
+      <MenuItem action={() => act("mute")}><BellOff />{chat.muted ? t.unmute : t.mute}</MenuItem>
+      <MenuItem action={() => act("archive")}><Archive />{chat.archived ? t.unarchive : t.archive}</MenuItem>
+    </DropdownMenu.Content></DropdownMenu.Portal>
+  </DropdownMenu.Root>;
 }
 
 export default function HomePage() {
-  const [view, setView] = useState<View>("feed");
-  const [language, setLanguage] = useState<Language>("kz");
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
-  const [composerOpen, setComposerOpen] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [feedFilter, setFeedFilter] = useState("all");
-  const [selectedChat, setSelectedChat] = useState(1);
-  const [messages, setMessages] = useState(initialMessages);
-  const [messageDraft, setMessageDraft] = useState("");
-  const [chatQuery, setChatQuery] = useState("");
-  const [joined, setJoined] = useState<Set<number>>(new Set([2]));
-  const t = copy[language];
-
-  const activeChat = chats.find((chat) => chat.id === selectedChat) ?? chats[0];
-  const filteredChats = useMemo(
-    () => chats.filter((chat) => chat.name.toLowerCase().includes(chatQuery.toLowerCase())),
-    [chatQuery],
-  );
-
-  function publishPost() {
-    const value = draft.trim();
-    if (!value) return;
-    setPosts((current) => [{ id: Date.now(), author: "Жанибек Қияшев", handle: "@zhanibek", initials: "ЖҚ", tone: "from-[#00A99D] to-[#006E7A]", time: language === "kz" ? "қазір" : "сейчас", location: t.city, verified: true, topic: "#ой", text: value, likes: 0, comments: 0, shares: 0 }, ...current]);
-    setDraft("");
-    setComposerOpen(false);
-  }
-
-  function toggleLike(id: number) {
-    setLikedPosts((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
-
-  function sendMessage(event: FormEvent) {
-    event.preventDefault();
-    const value = messageDraft.trim();
-    if (!value) return;
-    setMessages((current) => ({ ...current, [selectedChat]: [...(current[selectedChat] ?? []), { id: Date.now(), mine: true, text: value, time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) }] }));
-    setMessageDraft("");
-  }
-
-  const navItems = [
-    { id: "feed" as View, label: t.home, icon: Home },
-    { id: "chats" as View, label: t.chats, icon: MessageCircle, badge: 7 },
-    { id: "communities" as View, label: t.communities, icon: UsersRound },
-    { id: "services" as View, label: t.services, icon: Compass },
+  const [state, dispatch] = useReducer(messengerReducer, undefined, createDemoState);
+  const [locale, setLocale] = useState<Locale>("ru");
+  const [accent, setAccent] = useState<"green" | "blue">("green");
+  const [view, setView] = useState<View>("chats");
+  const [activeId, setActiveId] = useState("aigerim");
+  const [opened, setOpened] = useState(false);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
+  const [archived, setArchived] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [messageQuery, setMessageQuery] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [modal, setModal] = useState<Modal>(null);
+  const [newKind, setNewKind] = useState<"direct" | "group">("direct");
+  const [groupName, setGroupName] = useState("");
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [contactQuery, setContactQuery] = useState("");
+  const [notice, setNotice] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ chatId: string; messageId: string } | null>(null);
+  const [statusDraft, setStatusDraft] = useState("");
+  const [myStatus, setMyStatus] = useState("");
+  const [viewedStatus, setViewedStatus] = useState<{ name: string; text: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const composeRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const modalOpener = useRef<HTMLElement | null>(null);
+  const focusComposerAfterMenu = useRef(false);
+  const fileUrls = useRef(new Map<string, number>());
+  const t = messengerCopy[locale];
+  const active = state.threads.find(chat => chat.id === activeId)!;
+  const messages = state.messages[activeId] ?? [];
+  const draft = drafts[activeId] ?? emptyDraft;
+  const filtered = selectThreads(state, filter, query, archived, locale);
+  const unread = state.threads.filter(chat => !chat.archived).reduce((sum, chat) => sum + chat.unread, 0);
+  const archiveCount = state.threads.filter(chat => chat.archived).length;
+  const visibleMessages = messages.filter(message => localize(message.body, locale).toLocaleLowerCase().includes(messageQuery.toLocaleLowerCase()));
+  const searchContacts = contacts.filter(contact => contact.name.toLocaleLowerCase().includes(contactQuery.toLocaleLowerCase()));
+  const replyMessage = messages.find(message => message.id === draft.replyTo);
+  const nav = [
+    { id: "chats" as const, label: t.chats, icon: MessageCircle },
+    { id: "updates" as const, label: t.updates, icon: Megaphone },
+    { id: "calls" as const, label: t.calls, icon: Phone },
+    { id: "settings" as const, label: t.settings, icon: Settings },
   ];
 
-  return (
-    <main className="min-h-dvh bg-[#EEF2F5] text-[#17212B]">
-      <header className="sticky top-0 z-40 border-b border-[#DCE3E8] bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-4 px-4 sm:px-6">
-          <button className="flex items-center gap-2" onClick={() => setView("feed")} aria-label="Qazyna">
-            <span className="qazyna-mark">Q</span>
-            <span className="text-xl font-black tracking-[-0.04em] text-[#102D35]">Qazyna</span>
-          </button>
-          <div className="relative ml-auto hidden w-full max-w-[520px] md:block">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8B95]" />
-            <Input className="h-10 rounded-full border-transparent bg-[#F1F4F6] pl-10 shadow-none focus-visible:border-[#00A99D] focus-visible:ring-[#00A99D]/15" placeholder={t.search} />
-          </div>
-          <div className="ml-auto flex items-center gap-2 md:ml-0">
-            <Button variant="ghost" size="icon" className="relative rounded-full text-[#4F616B]" aria-label="Уведомления">
-              <Bell />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#EF5D67] ring-2 ring-white" />
-            </Button>
-            <button className="lang-switch" onClick={() => setLanguage((current) => current === "kz" ? "ru" : "kz")} aria-label="Сменить язык">
-              <span className={language === "kz" ? "active" : ""}>ҚАЗ</span><span className={language === "ru" ? "active" : ""}>RU</span>
-            </button>
-            <Avatar initials="ЖҚ" tone="from-[#00A99D] to-[#006E7A]" size="sm" />
+  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 4000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
+  }, [activeId, messages.length, opened]);
+  useEffect(() => {
+    const urls = fileUrls.current;
+    return () => { urls.forEach((_, url) => URL.revokeObjectURL(url)); urls.clear(); };
+  }, []);
+
+  function updateDraft(patch: Partial<Draft>) {
+    setDrafts(current => ({ ...current, [activeId]: { ...(current[activeId] ?? emptyDraft), ...patch } }));
+  }
+  function resetComposition() {
+    updateDraft({ text: "", replyTo: undefined, editing: undefined });
+  }
+  function openChat(id: string) {
+    setActiveId(id);
+    setOpened(true);
+    setSearchOpen(false);
+    setMessageQuery("");
+    dispatch({ type: "read", chatId: id });
+  }
+  function switchView(next: View) {
+    setView(next);
+    setOpened(false);
+    setSearchOpen(false);
+    setMessageQuery("");
+    if (next === "chats") { setArchived(false); setQuery(""); }
+  }
+  function send(event?: FormEvent) {
+    event?.preventDefault();
+    if (active.kind === "channel") return;
+    if (draft.text.trim().length > MAX_MESSAGE_LENGTH) { setNotice(t.tooLong); return; }
+    if (draft.editing) {
+      if (!draft.text.trim()) return;
+      dispatch({ type: "edit", chatId: activeId, messageId: draft.editing, body: draft.text });
+      releaseAttachment(draft.attachment);
+    } else {
+      if (!draft.text.trim() && !draft.attachment) return;
+      dispatch({ type: "send", chatId: activeId, message: { id: uid(), body: draft.text, mine: true, at: new Date().toISOString(), replyTo: draft.replyTo, attachment: draft.attachment } });
+    }
+    setDrafts(current => ({ ...current, [activeId]: { text: "" } }));
+    setNotice(t.noDelivery);
+    composeRef.current?.focus();
+  }
+  function newChat() {
+    setNewKind("direct"); setGroupName(""); setSelectedContacts([]); setContactQuery(""); setModal("new");
+  }
+  function startDirect(id: string) {
+    setView("chats"); setArchived(false); setQuery(""); setFilter("all");
+    const existing = state.threads.find(chat => chat.id === id);
+    if (existing?.archived) dispatch({ type: "archive", chatId: id });
+    setModal(null); openChat(id);
+  }
+  function createGroup(event: FormEvent) {
+    event.preventDefault();
+    if (!groupName.trim() || !selectedContacts.length) { setNotice(t.missingMembers); return; }
+    const id = uid();
+    dispatch({ type: "create", thread: { id, name: groupName.trim(), initials: "", color: "#638eae", kind: "group", members: [...selectedContacts], unread: 0, pinned: false, muted: false, archived: false, order: Math.max(...state.threads.map(chat => chat.order), 0) + 1 } });
+    setView("chats"); setArchived(false); setFilter("all"); setQuery(""); setModal(null); openChat(id);
+  }
+  function releaseAttachment(attachment?: Attachment) {
+    if (!attachment) return;
+    URL.revokeObjectURL(attachment.url);
+    fileUrls.current.delete(attachment.url);
+  }
+  function attach(file: File | undefined) {
+    if (!file) return;
+    const used = [...fileUrls.current.values()].reduce((sum, size) => sum + size, 0) - (draft.attachment?.size ?? 0);
+    if (file.size > MAX_ATTACHMENT_BYTES || used + file.size > MAX_SESSION_ATTACHMENT_BYTES) { setNotice(t.fileLimit); return; }
+    releaseAttachment(draft.attachment);
+    const url = URL.createObjectURL(file);
+    fileUrls.current.set(url, file.size);
+    // SVG and HTML are download-only; never embed active documents.
+    const kind = ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type) ? "image" : file.type.startsWith("audio/") ? "audio" : "file";
+    updateDraft({ attachment: { url, name: file.name, size: file.size, kind } });
+  }
+  function toSaved(message: Message) {
+    if (message.attachment) return;
+    dispatch({ type: "send", chatId: "saved", message: { id: uid(), body: localize(message.body, locale), at: new Date().toISOString(), mine: true } });
+    setNotice(t.savedToast);
+  }
+  async function copyMessage(message: Message) {
+    try { await navigator.clipboard.writeText(localize(message.body, locale)); setNotice(t.copied); }
+    catch { setNotice(t.copyError); }
+  }
+  const infoText = active.kind === "channel" ? t.channelInfo : active.kind === "saved" ? t.savedInfo : active.kind === "group" ? t.groupInfo + " · " + ((active.members?.length ?? 0) + 1) + " " + t.memberUnit : t.directInfo;
+  const textFor = (message?: Message) => message ? localize(message.body, locale) || (message.attachment?.kind === "image" ? t.photo : message.attachment?.kind === "audio" ? t.audio : t.file) : "";
+
+  function threadRow(chat: Thread) {
+    const last = (state.messages[chat.id] ?? []).at(-1);
+    const pending = drafts[chat.id];
+    return <li className={cn("conversation-row", opened && activeId === chat.id && "selected")} key={chat.id}>
+      <button className="conversation-open" onClick={() => openChat(chat.id)} aria-label={localize(chat.name, locale)} aria-current={opened && activeId === chat.id ? "true" : undefined}>
+        <Avatar chat={chat} />
+        <span className="conversation-summary">
+          <span className="conversation-title"><strong>{localize(chat.name, locale)}</strong><time className={chat.unread ? "unread-time" : ""}>{last ? clock(last.at) : ""}</time></span>
+          <span className="conversation-preview">
+            <span className="preview-text">{pending?.text || pending?.attachment ? <><span className="draft-label">{t.draft}: </span>{pending.text || t.attachment}</> : <>{last?.mine && <span className="preview-you">{t.you}: </span>}{last?.sender && <span>{last.sender}: </span>}{textFor(last) || t.noMessages}</>}</span>
+            {chat.muted && <BellOff className="small-icon" aria-label={t.mute} />}
+            {chat.pinned && <Pin className="small-icon" aria-label={t.pin} />}
+            {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
+          </span>
+        </span>
+      </button>
+      <div className="row-menu"><ChatMenu chat={chat} t={t} act={type => { dispatch({ type, chatId: chat.id }); if (type === "archive" && activeId === chat.id) setOpened(false); }} /></div>
+    </li>;
+  }
+
+  return <main className={cn("messenger-shell", opened && "conversation-open-mobile")} data-accent={accent}>
+    <nav className="desktop-rail" aria-label={t.chats}>
+      <button className="wordmark-icon" onClick={() => switchView("chats")} aria-label="Qazyna">Q</button>
+      {nav.map(item => <button key={item.id} title={item.label} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={cn("rail-button", view === item.id && "active")} onClick={() => switchView(item.id)}><item.icon />{item.id === "chats" && unread > 0 && <span className="rail-dot" />}</button>)}
+      <button className="rail-button rail-bottom" onClick={() => setModal("about")} aria-label={t.help} title={t.help}><CircleHelp /></button>
+      <button className="profile-dot" onClick={() => switchView("settings")} aria-label={t.me}><CircleUserRound /></button>
+    </nav>
+
+    <section className="inbox-panel" aria-label={t[view]}>
+      <header className="inbox-header">
+        <div className="brand-row"><span>Qazyna</span><button className="demo-label" onClick={() => setModal("about")}>{t.demo}</button></div>
+        <div className="title-row">
+          <h1>{view === "chats" && archived ? t.archive : t[view]}</h1>
+          <div className="title-actions">
+            {view === "chats" && archived && <Button variant="ghost" size="icon" className="icon-button" onClick={() => setArchived(false)} aria-label={t.back}><ArrowLeft /></Button>}
+            {view === "chats" && <Button variant="ghost" size="icon" className="icon-button" onClick={newChat} aria-label={t.newChat} title={t.newChat}><MessageSquarePlus /></Button>}
+            {view === "calls" && <Button variant="ghost" size="icon" className="icon-button" onClick={() => setModal("call")} aria-label={t.startCall}><Plus /></Button>}
+            <Button variant="ghost" size="icon" className="icon-button" onClick={() => switchView("settings")} aria-label={t.settings}><MoreVertical /></Button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-5 px-0 pb-24 md:px-6 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,720px)_300px]">
-        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] flex-col py-6 lg:flex">
-          <nav className="space-y-1.5" aria-label="Основная навигация">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return <button key={item.id} className={cn("side-nav-item", view === item.id && "active")} onClick={() => setView(item.id)}><Icon className="h-5 w-5" /><span>{item.label}</span>{item.badge && <span className="ml-auto rounded-full bg-[#EF5D67] px-2 py-0.5 text-xs font-bold text-white">{item.badge}</span>}</button>;
-            })}
-          </nav>
-          <Button className="mt-5 h-11 rounded-2xl bg-[#00A99D] font-bold text-white shadow-[0_10px_24px_rgba(0,169,157,.22)] hover:bg-[#008F85]" onClick={() => { setView("feed"); setComposerOpen(true); }}><PenLine /> {t.newPost}</Button>
-          <div className="mt-auto space-y-1">
-            <button className="side-nav-item text-[#647680]"><Settings className="h-5 w-5" /> Баптаулар</button>
-            <button className="side-nav-item text-[#647680]"><CircleHelp className="h-5 w-5" /> Көмек</button>
+      {view === "chats" && <>
+        <div className="search-box"><Search /><Input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search} />{query && <button onClick={() => setQuery("")} aria-label={t.close}><X /></button>}</div>
+        <div className="chat-filters" role="group" aria-label={t.chats}>{(["all", "unread", "groups", "channels"] as Filter[]).map(item => <button key={item} aria-pressed={filter === item} className={cn("filter-chip", filter === item && "active")} onClick={() => setFilter(item)}>{t[item]}</button>)}</div>
+        <div className="inbox-scroll">
+          {!archived && <button className="archive-row" onClick={() => { setArchived(true); setFilter("all"); setQuery(""); }}><Archive /><span>{t.archive}</span><span>{archiveCount}</span></button>}
+          {filtered.length ? <ul className="conversation-list">{filtered.map(threadRow)}</ul> : <div className="small-empty"><Search /><strong>{t.noChats}</strong><p>{t.noChatsHint}</p></div>}
+        </div>
+        <button className="new-chat-fab" onClick={newChat} aria-label={t.newChat}><MessageSquarePlus /></button>
+      </>}
+
+      {view === "updates" && <div className="inbox-scroll updates-list">
+        <div className="section-heading"><h2>{t.statuses}</h2><Button variant="ghost" size="icon" className="icon-button" onClick={() => setModal("status")} aria-label={t.addStatus}><Plus /></Button></div>
+        <button className="status-row" onClick={() => myStatus ? (setViewedStatus({ name: t.myStatus, text: myStatus }), setModal("view-status")) : setModal("status")}><span className={cn("status-ring", myStatus && "has-status")}><CircleUserRound /><span className="status-plus">+</span></span><span><strong>{t.myStatus}</strong><small>{myStatus || t.addStatus}</small></span></button>
+        <button className="status-row" onClick={() => { setViewedStatus({ name: "Данияр", text: locale === "ru" ? t.sampleStatus : t.sampleStatusKk }); setModal("view-status"); }}><span className="status-ring has-status"><Avatar chat={{ initials: "Д", color: "#658db5", kind: "direct" }} small /></span><span><strong>Данияр</strong><small>{t.demo} · 09:30</small></span></button>
+        <div className="section-divider" />
+        <div className="section-heading"><h2>{t.channels}</h2><Megaphone className="muted" /></div>
+        <p className="section-description">{t.subscribeHint}</p>
+        <ul className="conversation-list">{state.threads.filter(chat => chat.kind === "channel" && chat.following).map(threadRow)}</ul>
+        <h3 className="find-heading">{t.discover}</h3>
+        {state.threads.filter(chat => chat.kind === "channel" && !chat.following).map(chat => <div className="channel-discover" key={chat.id}><button onClick={() => openChat(chat.id)}><Avatar chat={chat} /><span><strong>{localize(chat.name, locale)}</strong><small>{t.channelInfo}</small></span></button><Button variant="secondary" className="subscribe-small" onClick={() => dispatch({ type: "follow", chatId: chat.id })}>{t.follow}</Button></div>)}
+      </div>}
+
+      {view === "calls" && <div className="inbox-scroll"><div className="small-empty calls-empty"><span className="empty-icon"><Phone /></span><strong>{t.noCalls}</strong><p>{t.callsHint}</p><Button className="primary-button" onClick={() => setModal("call")}><Phone />{t.startCall}</Button><small>{t.soon}</small></div></div>}
+
+      {view === "settings" && <div className="inbox-scroll settings-list">
+        <div className="settings-profile"><span className="avatar profile"><CircleUserRound /></span><div><strong>{t.me}</strong><small>{t.profileHint}</small></div></div>
+        <section className="setting-section"><h2><Languages />{t.language}</h2><div className="segmented" role="group" aria-label={t.language}><button className={locale === "ru" ? "active" : ""} onClick={() => setLocale("ru")} aria-pressed={locale === "ru"}>Русский</button><button className={locale === "kk" ? "active" : ""} onClick={() => setLocale("kk")} aria-pressed={locale === "kk"}>Қазақша</button></div></section>
+        <section className="setting-section"><h2><Palette />{t.appearance}</h2><div className="segmented" role="group" aria-label={t.appearance}><button className={accent === "green" ? "active" : ""} onClick={() => setAccent("green")} aria-pressed={accent === "green"}><i className="color-dot green" />{t.green}</button><button className={accent === "blue" ? "active" : ""} onClick={() => setAccent("blue")} aria-pressed={accent === "blue"}><i className="color-dot blue" />{t.blue}</button></div><p>{t.themeHint}</p></section>
+        <button className="settings-row" onClick={() => setModal("about")}><Shield /><span>{t.privacy}</span><ChevronRight /></button>
+        <button className="settings-row" onClick={() => { switchView("chats"); openChat("saved"); }}><Bookmark /><span>{t.saved}</span><ChevronRight /></button>
+        <button className="settings-row" onClick={() => setModal("about")}><Info /><span>{t.help}</span><ChevronRight /></button>
+      </div>}
+      <button className="demo-footer" onClick={() => setModal("about")}><Info /><span>{t.demoShort}</span></button>
+    </section>
+
+    <section className={cn("chat-panel", view !== "chats" && !opened && "show-welcome")} aria-label={localize(active.name, locale)}>
+      {view !== "chats" && !opened ? <div className="welcome-panel"><span className="welcome-mark"><MessageCircle /></span><h2>Qazyna</h2><p>{t.selectChatHint}</p><span className="welcome-demo">{t.demo} · {t.demoShort}</span></div> : <>
+        <header className="chat-header">
+          <Button variant="ghost" size="icon" className="icon-button mobile-back" onClick={() => setOpened(false)} aria-label={t.back}><ArrowLeft /></Button>
+          <button className="chat-identity" onClick={() => setModal("info")} aria-label={t.chatInfo}><Avatar chat={active} small /><span><strong>{localize(active.name, locale)}</strong><small>{infoText}</small></span></button>
+          <div className="chat-header-actions">
+            {active.kind !== "channel" && active.kind !== "saved" && <><Button variant="ghost" size="icon" className="icon-button" onClick={() => setModal("call")} aria-label={t.video} title={t.video}><Video /></Button><Button variant="ghost" size="icon" className="icon-button audio-call" onClick={() => setModal("call")} aria-label={t.phone} title={t.phone}><Phone /></Button><span className="header-divider" /></>}
+            <Button variant="ghost" size="icon" className="icon-button" onClick={() => { setSearchOpen(!searchOpen); setMessageQuery(""); }} aria-label={t.chatSearch} title={t.chatSearch}><Search /></Button>
+            <ChatMenu chat={active} t={t} act={type => { dispatch({ type, chatId: activeId }); if (type === "archive") setOpened(false); }} />
           </div>
-          <p className="mt-4 px-3 text-xs leading-5 text-[#8A99A1]">© 2026 Qazyna · Қазақстанда жасалған</p>
-        </aside>
+        </header>
+        {searchOpen && <div className="message-search"><Search /><Input autoFocus value={messageQuery} onChange={e => setMessageQuery(e.target.value)} placeholder={t.chatSearch} aria-label={t.chatSearch} /><span>{visibleMessages.length}</span><Button variant="ghost" size="icon" className="icon-button" onClick={() => { setSearchOpen(false); setMessageQuery(""); }} aria-label={t.close}><X /></Button></div>}
 
-        <section className="min-w-0 py-0 md:py-5">
-          {view === "feed" && <FeedView t={t} posts={posts} likedPosts={likedPosts} composerOpen={composerOpen} draft={draft} feedFilter={feedFilter} setComposerOpen={setComposerOpen} setDraft={setDraft} setFeedFilter={setFeedFilter} publishPost={publishPost} toggleLike={toggleLike} />}
-          {view === "chats" && <ChatsView t={t} activeChat={activeChat} selectedChat={selectedChat} setSelectedChat={setSelectedChat} filteredChats={filteredChats} chatQuery={chatQuery} setChatQuery={setChatQuery} messages={messages[selectedChat] ?? []} messageDraft={messageDraft} setMessageDraft={setMessageDraft} sendMessage={sendMessage} />}
-          {view === "communities" && <CommunitiesView t={t} joined={joined} setJoined={setJoined} />}
-          {view === "services" && <ServicesView t={t} />}
-        </section>
-
-        <RightRail t={t} className={view === "chats" ? "xl:hidden" : ""} />
-      </div>
-
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#DCE3E8] bg-white/96 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden" aria-label="Мобильная навигация">
-        <div className="mx-auto flex max-w-xl items-center justify-around">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return <button key={item.id} className={cn("mobile-nav-item", view === item.id && "active")} onClick={() => setView(item.id)}><span className="relative"><Icon className="h-5 w-5" />{item.badge && <span className="absolute -right-2 -top-1 h-2 w-2 rounded-full bg-[#EF5D67]" />}</span><span>{item.label}</span></button>;
-          })}
-        </div>
-      </nav>
-    </main>
-  );
-}
-
-function FeedView({ t, posts, likedPosts, composerOpen, draft, feedFilter, setComposerOpen, setDraft, setFeedFilter, publishPost, toggleLike }: { t: typeof copy.kz; posts: Post[]; likedPosts: Set<number>; composerOpen: boolean; draft: string; feedFilter: string; setComposerOpen: (value: boolean) => void; setDraft: (value: string) => void; setFeedFilter: (value: string) => void; publishPost: () => void; toggleLike: (id: number) => void; }) {
-  const filters = [{ id: "all", label: t.all }, { id: "local", label: t.local }, { id: "business", label: t.business }, { id: "tech", label: t.technology }];
-  return (
-    <div className="space-y-3 md:space-y-4">
-      <div className="border-b border-[#E0E6EA] bg-white px-4 pb-3 pt-4 md:rounded-t-[24px] md:border md:px-5">
-        <div className="flex items-center justify-between">
-          <div><h1 className="text-xl font-extrabold tracking-tight">{t.feed}</h1><button className="mt-1 flex items-center gap-1 text-sm font-semibold text-[#008F85]"><MapPin className="h-3.5 w-3.5" />{t.city}</button></div>
-          <Button variant="ghost" size="icon" className="rounded-full md:hidden"><Search /></Button>
-        </div>
-        <div className="scrollbar-none -mx-1 mt-4 flex gap-2 overflow-x-auto px-1">{filters.map((filter) => <button key={filter.id} onClick={() => setFeedFilter(filter.id)} className={cn("filter-pill", feedFilter === filter.id && "active")}>{filter.label}</button>)}</div>
-      </div>
-
-      <article className="surface-card rounded-none px-4 py-4 md:rounded-[24px] md:px-5">
-        <div className="flex gap-3">
-          <Avatar initials="ЖҚ" tone="from-[#00A99D] to-[#006E7A]" />
-          {!composerOpen ? <button className="h-11 flex-1 rounded-2xl bg-[#F1F4F6] px-4 text-left text-base text-[#7B8C95] transition hover:bg-[#E9EEF1]" onClick={() => setComposerOpen(true)}>{t.compose}</button> : (
-            <div className="min-w-0 flex-1">
-              <Textarea autoFocus value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={t.postPlaceholder} className="min-h-28 rounded-2xl border-[#DDE5E9] bg-[#F8FAFB] text-base shadow-none focus-visible:border-[#00A99D] focus-visible:ring-[#00A99D]/15" />
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button variant="ghost" size="sm" className="rounded-xl text-[#547078]"><ImageIcon /> {t.photo}</Button><Button variant="ghost" size="sm" className="rounded-xl text-[#547078]"><Hash /> {t.topic}</Button>
-                <div className="ml-auto flex gap-2"><Button variant="ghost" size="sm" className="rounded-xl" onClick={() => { setComposerOpen(false); setDraft(""); }}>{t.cancel}</Button><Button size="sm" className="rounded-xl bg-[#00A99D] px-4 hover:bg-[#008F85]" disabled={!draft.trim()} onClick={publishPost}>{t.publish}</Button></div>
-              </div>
-            </div>
-          )}
-        </div>
-        {!composerOpen && <div className="mt-3 flex items-center gap-2 border-t border-[#EDF1F3] pt-3 pl-14"><button className="composer-action"><ImageIcon /> {t.photo}</button><button className="composer-action"><Hash /> {t.topic}</button></div>}
-      </article>
-
-      {posts.map((post) => {
-        const liked = likedPosts.has(post.id);
-        return (
-          <article key={post.id} className="surface-card rounded-none p-4 md:rounded-[24px] md:p-5">
-            <div className="flex gap-3">
-              <Avatar initials={post.initials} tone={post.tone} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0"><div className="flex items-center gap-1.5"><h2 className="truncate font-bold">{post.author}</h2>{post.verified && <BadgeCheck className="h-4 w-4 shrink-0 fill-[#00A99D] text-white" />}</div><div className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#82919A]"><span>{post.handle}</span><span>·</span><span>{post.time}</span>{post.location && <><span>·</span><span>{post.location}</span></>}</div></div>
-                  <Button variant="ghost" size="icon-sm" className="ml-auto rounded-full text-[#8A99A1]"><MoreHorizontal /></Button>
+        <div className="chat-wallpaper">
+          <div className="chat-history" role="log" aria-live="polite" aria-relevant="additions text" aria-label={t.chats}>
+            <div className="day-divider"><span>{t.today}</span></div>
+            <button className="chat-demo-note" onClick={() => setModal("about")}><Info />{t.demo} · {t.demoShort}</button>
+            {!visibleMessages.length && <div className="history-empty">{messageQuery ? t.noMatches : t.noMessagesHint}</div>}
+            {visibleMessages.map(message => {
+              const quoted = messages.find(item => item.id === message.replyTo);
+              return <article className={cn("message-row", message.mine && "outgoing", active.kind === "channel" && "channel-message")} key={message.id}>
+                <div className="message-bubble">
+                  {message.sender && active.kind === "group" && <strong className="message-sender">{message.sender}</strong>}
+                  {message.replyTo && <div className="reply-quote"><strong>{quoted ? quoted.mine ? t.you : quoted.sender || localize(active.name, locale) : t.reply}</strong><span>{quoted ? textFor(quoted) : t.quoteDeleted}</span></div>}
+                  {message.attachment && <AttachmentView file={message.attachment} t={t} />}
+                  {localize(message.body, locale) && <p className="message-body">{localize(message.body, locale)}</p>}
+                  <div className="message-meta">{message.edited && <span>{t.edited}</span>}<time dateTime={message.at}>{clock(message.at)}</time>{message.mine && <span title={t.noDelivery} aria-label={t.noDelivery}><Clock3 /></span>}</div>
+                  <DropdownMenu.Root><DropdownMenu.Trigger asChild><button className="message-menu-trigger" aria-label={t.more}><ChevronDown /></button></DropdownMenu.Trigger>
+                    <DropdownMenu.Portal><DropdownMenu.Content className="context-menu" sideOffset={4} align="end" onCloseAutoFocus={e => { if (focusComposerAfterMenu.current) { e.preventDefault(); focusComposerAfterMenu.current = false; composeRef.current?.focus(); } }}>
+                      {active.kind !== "channel" && <MenuItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ replyTo: message.id, editing: undefined }); }}><Reply />{t.reply}</MenuItem>}
+                      <MenuItem action={() => void copyMessage(message)}><Copy />{t.copy}</MenuItem>
+                      {!message.attachment && <MenuItem action={() => toSaved(message)}><Bookmark />{t.saveTo}</MenuItem>}
+                      {message.mine && <MenuItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ editing: message.id, text: localize(message.body, locale), replyTo: undefined }); }}><Pencil />{t.edit}</MenuItem>}
+                      {message.mine && <MenuItem danger action={() => setDeleteTarget({ chatId: activeId, messageId: message.id })}><Trash2 />{t.delete}</MenuItem>}
+                    </DropdownMenu.Content></DropdownMenu.Portal>
+                  </DropdownMenu.Root>
                 </div>
-                <p className="mt-3 whitespace-pre-wrap text-[15.5px] leading-6 text-[#21333D] md:text-base">{post.text}</p>
-                <button className="mt-2 text-sm font-semibold text-[#008F85]">{post.topic}</button>
-                <div className="mt-4 flex items-center justify-between border-t border-[#EDF1F3] pt-3 text-[#6D7E87]">
-                  <button className={cn("post-action", liked && "liked")} onClick={() => toggleLike(post.id)}><Heart className={cn(liked && "fill-current")} /><span>{post.likes + (liked ? 1 : 0)}</span></button><button className="post-action"><MessageSquare /><span>{post.comments}</span></button><button className="post-action"><Repeat2 /><span>{post.shares}</span></button><button className="post-action" aria-label="Поделиться"><Send /></button>
-                </div>
-              </div>
-            </div>
-          </article>
-        );
-      })}
-    </div>
-  );
-}
-
-function ChatsView({ t, activeChat, selectedChat, setSelectedChat, filteredChats, chatQuery, setChatQuery, messages, messageDraft, setMessageDraft, sendMessage }: { t: typeof copy.kz; activeChat: Chat; selectedChat: number; setSelectedChat: (id: number) => void; filteredChats: Chat[]; chatQuery: string; setChatQuery: (value: string) => void; messages: Message[]; messageDraft: string; setMessageDraft: (value: string) => void; sendMessage: (event: FormEvent) => void; }) {
-  return (
-    <div className="chat-shell md:rounded-[24px]">
-      <aside className="chat-list">
-        <div className="flex items-center justify-between px-4 pb-3 pt-4"><h1 className="text-xl font-extrabold">{t.messages}</h1><Button size="icon-sm" className="rounded-full bg-[#00A99D] hover:bg-[#008F85]" aria-label="Новый чат"><Plus /></Button></div>
-        <div className="relative px-3 pb-3"><Search className="absolute left-6 top-1/2 h-4 w-4 -translate-y-[calc(50%+6px)] text-[#89979F]" /><Input value={chatQuery} onChange={(event) => setChatQuery(event.target.value)} placeholder={t.chatSearch} className="h-10 rounded-xl border-transparent bg-[#F1F4F6] pl-10 shadow-none" /></div>
-        <div className="scrollbar-thin flex gap-2 overflow-x-auto px-3 pb-3 md:block md:h-[calc(100%-116px)] md:space-y-1 md:overflow-y-auto md:pb-4">
-          {filteredChats.map((chat) => <button key={chat.id} onClick={() => setSelectedChat(chat.id)} className={cn("chat-row", selectedChat === chat.id && "active")}><Avatar initials={chat.initials} tone={chat.tone} online={chat.online} /><span className="hidden min-w-0 flex-1 text-left md:block"><span className="flex items-center gap-1 font-bold"><span className="truncate">{chat.name}</span>{chat.verified && <BadgeCheck className="h-4 w-4 fill-[#00A99D] text-white" />}</span><span className="mt-0.5 block truncate text-sm text-[#7B8B94]">{chat.preview}</span></span><span className="hidden shrink-0 self-start text-right md:block"><span className="block text-xs text-[#91A0A8]">{chat.time}</span>{chat.unread && <span className="mt-1 inline-flex min-w-5 justify-center rounded-full bg-[#00A99D] px-1.5 py-0.5 text-xs font-bold text-white">{chat.unread}</span>}</span></button>)}
+              </article>;
+            })}
+            <div ref={bottomRef} />
+          </div>
         </div>
-      </aside>
 
-      <section className="message-panel">
-        <header className="flex h-[70px] items-center gap-3 border-b border-[#E6ECEF] bg-white px-4"><Avatar initials={activeChat.initials} tone={activeChat.tone} online={activeChat.online} size="sm" /><div className="min-w-0"><div className="flex items-center gap-1 font-bold"><span className="truncate">{activeChat.name}</span>{activeChat.verified && <BadgeCheck className="h-4 w-4 fill-[#00A99D] text-white" />}</div><p className="text-[13px] text-[#00A99D]">{activeChat.online ? "онлайн" : "жақында кірді"}</p></div><div className="ml-auto flex gap-1"><Button variant="ghost" size="icon" className="rounded-full text-[#60747E]"><Phone /></Button><Button variant="ghost" size="icon" className="rounded-full text-[#60747E]"><Video /></Button><Button variant="ghost" size="icon" className="rounded-full text-[#60747E]"><MoreHorizontal /></Button></div></header>
-        <div className="message-background scrollbar-thin flex min-h-[430px] flex-1 flex-col overflow-y-auto p-4"><div className="mx-auto mb-5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[#71838C] shadow-sm">Бүгін</div><div className="mt-auto space-y-2">{messages.map((message) => <div key={message.id} className={cn("flex", message.mine ? "justify-end" : "justify-start")}><div className={cn("message-bubble", message.mine ? "mine" : "theirs")}><p>{message.text}</p><span>{message.time}{message.mine && <CheckCheck className="h-3.5 w-3.5 text-[#008F85]" />}</span></div></div>)}</div></div>
-        <form className="flex items-end gap-2 border-t border-[#E5EBEE] bg-white p-3" onSubmit={sendMessage}><Button type="button" variant="ghost" size="icon" className="rounded-full text-[#72838C]"><Paperclip /></Button><Input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder={t.messagePlaceholder} className="h-11 flex-1 rounded-2xl border-transparent bg-[#F1F4F6] px-4 text-base shadow-none focus-visible:border-[#00A99D] focus-visible:ring-[#00A99D]/15" /><Button type="submit" size="icon" className="h-11 w-11 rounded-full bg-[#00A99D] shadow-md hover:bg-[#008F85]" disabled={!messageDraft.trim()}><Send /></Button></form>
-      </section>
-    </div>
-  );
+        {active.kind === "channel" ? <footer className="channel-composer"><p>{t.readonly}</p><Button className="primary-button" onClick={() => dispatch({ type: "follow", chatId: activeId })}>{active.following ? t.unfollow : t.follow}</Button></footer> : <footer className="composer">
+          {(draft.replyTo || draft.editing) && <div className="compose-reference"><span>{draft.editing ? <Pencil /> : <Reply />}</span><div><strong>{draft.editing ? t.edit : t.reply}</strong><p>{draft.editing ? draft.text : replyMessage ? textFor(replyMessage) : t.quoteDeleted}</p></div><Button variant="ghost" size="icon" className="icon-button" onClick={() => draft.editing ? resetComposition() : updateDraft({ replyTo: undefined })} aria-label={t.cancel}><X /></Button></div>}
+          {draft.attachment && !draft.editing && <div className="compose-attachment"><FileText /><div><strong>{draft.attachment.name}</strong><small>{t.attachmentHint}</small></div><Button variant="ghost" size="icon" className="icon-button" aria-label={t.delete} onClick={() => { releaseAttachment(draft.attachment); updateDraft({ attachment: undefined }); }}><X /></Button></div>}
+          <form className="composer-form" onSubmit={send}>
+            <Popover.Root><Popover.Trigger asChild><Button type="button" variant="ghost" size="icon" className="icon-button" aria-label={t.emoji}><Smile /></Button></Popover.Trigger><Popover.Portal><Popover.Content className="emoji-menu" sideOffset={12} aria-label={t.emoji}>{["🙂", "❤️", "👍", "😂", "🙏", "🔥", "🤍", "😊", "👋", "🎉", "👌", "🇰🇿"].map(emoji => <Popover.Close key={emoji} asChild><button onClick={() => { updateDraft({ text: draft.text + emoji }); composeRef.current?.focus(); }} aria-label={emoji}>{emoji}</button></Popover.Close>)}</Popover.Content></Popover.Portal></Popover.Root>
+            <Button type="button" variant="ghost" size="icon" className="icon-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label={t.attachment} title={t.attachment}><Paperclip /></Button>
+            <input type="file" ref={fileRef} hidden onChange={e => { attach(e.target.files?.[0]); e.target.value = ""; }} />
+            <Textarea ref={composeRef} value={draft.text} rows={1} maxLength={MAX_MESSAGE_LENGTH} className="message-input" placeholder={t.message} aria-label={t.message} onChange={e => updateDraft({ text: e.target.value })} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
+            {draft.text.trim() || draft.attachment || draft.editing ? <Button type="submit" size="icon" className="send-button" disabled={draft.editing ? !draft.text.trim() : !draft.text.trim() && !draft.attachment} aria-label={draft.editing ? t.save : t.send}>{draft.editing ? <Check /> : <Send />}</Button> : <Button type="button" variant="ghost" size="icon" className="icon-button mic-button" onClick={() => setModal("voice")} aria-label={t.voice} title={t.voice}><Mic /></Button>}
+          </form>
+          <p className="keyboard-hint">{t.enterHint}</p>
+        </footer>}
+      </>}
+    </section>
+
+    <nav className="mobile-nav" aria-label={t.typeHint}>{nav.map(item => <button className={cn(view === item.id && "active")} onClick={() => switchView(item.id)} aria-current={view === item.id ? "page" : undefined} key={item.id}><span><item.icon />{item.id === "chats" && unread > 0 && <b>{unread}</b>}</span><small>{item.label}</small></button>)}</nav>
+
+    <Dialog.Root open={modal !== null} onOpenChange={value => { if (!value) setModal(null); }}>
+      <Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className={cn("modal-content", modal === "view-status" && "status-modal")} onOpenAutoFocus={() => { modalOpener.current = document.activeElement as HTMLElement | null; }} onCloseAutoFocus={e => { e.preventDefault(); if (modalOpener.current?.getClientRects().length) modalOpener.current.focus(); else composeRef.current?.focus(); }}>
+        <Dialog.Title>{modal === "new" ? newKind === "group" ? t.newGroup : t.newChat : modal === "call" ? t.notReadyTitle : modal === "voice" ? t.voice : modal === "info" ? localize(active.name, locale) : modal === "status" ? t.myStatus : modal === "view-status" ? viewedStatus?.name : t.demoTitle}</Dialog.Title>
+        <Dialog.Description>{modal === "new" ? t.groupHint : modal === "call" ? t.notReadyHint : modal === "voice" ? t.voiceHint : modal === "info" ? infoText : modal === "status" || modal === "view-status" ? t.statusHint : t.demoHint}</Dialog.Description>
+        <Dialog.Close asChild><Button variant="ghost" size="icon" className="icon-button modal-close" aria-label={t.close}><X /></Button></Dialog.Close>
+        {modal === "about" && <div className="modal-body"><p>{t.demoDetails}</p><h3><Shield />{t.privacy}</h3><p>{t.privacyHint}</p></div>}
+        {modal === "voice" && <div className="modal-body"><Button className="primary-button" onClick={() => { setModal(null); fileRef.current?.click(); }}><Paperclip />{t.attachment}</Button></div>}
+        {modal === "info" && <div className="modal-body info-body"><Avatar chat={active} /><p>{messages.length} {t.messageCount}</p>{active.members && <ul className="member-list"><li>{t.you}</li>{active.members.map(id => <li key={id}>{contacts.find(person => person.id === id)?.name ?? id}</li>)}</ul>}<p>{t.demoShort}</p></div>}
+        {modal === "new" && <div className="modal-body">
+          <div className="segmented" role="group" aria-label={t.newChat}><button className={newKind === "direct" ? "active" : ""} aria-pressed={newKind === "direct"} onClick={() => setNewKind("direct")}>{t.newChat}</button><button className={newKind === "group" ? "active" : ""} aria-pressed={newKind === "group"} onClick={() => setNewKind("group")}>{t.newGroup}</button></div>
+          <form onSubmit={createGroup}>
+            {newKind === "group" && <label className="field-label">{t.groupName}<Input value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={64} required /></label>}
+            <label className="field-label">{t.contacts}<Input value={contactQuery} onChange={e => setContactQuery(e.target.value)} placeholder={t.search} /></label>
+            <div className="contact-picker">
+              {newKind === "direct" && !contactQuery && <button type="button" onClick={() => startDirect("saved")}><Avatar chat={{ initials: "", kind: "saved", color: "#5b9ecd" }} /><strong>{t.saved}</strong></button>}
+              {searchContacts.map(person => newKind === "direct" ? <button type="button" key={person.id} onClick={() => startDirect(person.id)}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong></button> : <label className="contact-checkbox" key={person.id}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong><input type="checkbox" checked={selectedContacts.includes(person.id)} onChange={e => setSelectedContacts(current => e.target.checked ? [...current, person.id] : current.filter(id => id !== person.id))} /></label>)}
+              {!searchContacts.length && <p>{t.noMatches}</p>}
+            </div>
+            {newKind === "group" && <Button type="submit" className="primary-button wide" disabled={!groupName.trim() || !selectedContacts.length}><UsersRound />{t.create} · {selectedContacts.length}</Button>}
+          </form>
+        </div>}
+        {modal === "status" && <form className="modal-body" onSubmit={e => { e.preventDefault(); if (statusDraft.trim()) { setMyStatus(statusDraft.trim()); setStatusDraft(""); setModal(null); } }}><Textarea value={statusDraft} maxLength={500} onChange={e => setStatusDraft(e.target.value)} placeholder={t.statusPlaceholder} aria-label={t.statusPlaceholder} required /><Button className="primary-button wide" disabled={!statusDraft.trim()}>{t.publish}</Button></form>}
+        {modal === "view-status" && <div className="status-text">{viewedStatus?.text}</div>}
+      </Dialog.Content></Dialog.Portal>
+    </Dialog.Root>
+
+    <Dialog.Root open={!!deleteTarget} onOpenChange={value => { if (!value) setDeleteTarget(null); }}>
+      <Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className="modal-content" onCloseAutoFocus={e => { e.preventDefault(); composeRef.current?.focus(); }}>
+        <Dialog.Title>{t.deleteTitle}</Dialog.Title><Dialog.Description>{t.deleteHint}</Dialog.Description>
+        <div className="confirm-actions"><Dialog.Close asChild><Button variant="secondary">{t.cancel}</Button></Dialog.Close><Button variant="destructive" onClick={() => { if (deleteTarget) { const message = state.messages[deleteTarget.chatId]?.find(item => item.id === deleteTarget.messageId); releaseAttachment(message?.attachment); dispatch({ type: "remove", ...deleteTarget }); if (draft.editing === deleteTarget.messageId) resetComposition(); } setDeleteTarget(null); }}>{t.delete}</Button></div>
+      </Dialog.Content></Dialog.Portal>
+    </Dialog.Root>
+    <div className={cn("toast-notice", !notice && "is-hidden")} role="status" aria-live="polite">{notice}</div>
+  </main>;
 }
 
-function CommunitiesView({ t, joined, setJoined }: { t: typeof copy.kz; joined: Set<number>; setJoined: (value: Set<number>) => void }) {
-  function toggleCommunity(id: number) { const next = new Set(joined); if (next.has(id)) next.delete(id); else next.add(id); setJoined(next); }
-  return (
-    <div className="surface-card min-h-[680px] rounded-none p-4 md:rounded-[24px] md:p-6">
-      <div className="rounded-[22px] bg-[linear-gradient(125deg,#0B3036,#006E74_58%,#00A99D)] p-6 text-white md:p-8"><div className="flex items-center gap-2 text-sm font-bold text-[#A9F0E7]"><UsersRound className="h-4 w-4" /> QAZYNA ҚАУЫМ</div><h1 className="mt-3 max-w-md text-3xl font-black tracking-tight md:text-4xl">{t.communityTitle}</h1><p className="mt-3 max-w-lg text-base leading-7 text-white/75">{t.communityIntro}</p><div className="relative mt-6 max-w-md"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" /><Input placeholder={t.search} className="h-12 rounded-2xl border-white/15 bg-white/12 pl-11 text-white shadow-none placeholder:text-white/55 focus-visible:border-white/40 focus-visible:ring-white/10" /></div></div>
-      <div className="mt-7 flex items-center justify-between"><h2 className="text-xl font-extrabold">{t.suggestions}</h2><button className="text-sm font-bold text-[#008F85]">{t.seeAll}</button></div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">{communities.map((community) => { const isJoined = joined.has(community.id); return <article key={community.id} className="rounded-[22px] border border-[#E3E9EC] p-4 transition hover:-translate-y-0.5 hover:border-[#B8DAD6] hover:shadow-lg hover:shadow-[#173A3C]/5"><div className="flex items-start gap-3"><Avatar initials={community.initials} tone={community.tone} size="lg" /><Badge variant="secondary" className="ml-auto bg-[#F0F4F6] text-[#61737C]">{community.tag}</Badge></div><h3 className="mt-4 text-lg font-extrabold">{community.name}</h3><p className="mt-1 min-h-10 text-sm leading-5 text-[#71828B]">{community.description}</p><div className="mt-4 flex items-center justify-between"><span className="text-sm font-semibold text-[#7D8D95]">{community.members} мүше</span><Button onClick={() => toggleCommunity(community.id)} variant={isJoined ? "secondary" : "default"} size="sm" className={cn("rounded-xl", !isJoined && "bg-[#00A99D] hover:bg-[#008F85]")}>{isJoined ? <><CheckCheck />{t.joined}</> : <><Plus />{t.join}</>}</Button></div></article>; })}</div>
-    </div>
-  );
-}
-
-function ServicesView({ t }: { t: typeof copy.kz }) {
-  return (
-    <div className="space-y-4">
-      <section className="surface-card rounded-none p-5 md:rounded-[24px] md:p-7"><div className="flex items-start justify-between gap-4"><div><p className="flex items-center gap-2 text-sm font-bold text-[#008F85]"><ShieldCheck className="h-4 w-4" /> QAZYNA SENIM</p><h1 className="mt-2 text-3xl font-black tracking-tight">{t.serviceTitle}</h1><p className="mt-2 max-w-xl leading-7 text-[#6F818A]">{t.serviceIntro}</p></div><div className="hidden rounded-2xl bg-[#E2F7F4] p-3 text-[#008F85] sm:block"><Sparkles className="h-7 w-7" /></div></div><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{services.map((service) => { const Icon = service.icon; return <button key={service.name} className="group rounded-[20px] border border-[#E3E9EC] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#B9DCD7] hover:shadow-lg hover:shadow-[#173A3C]/5"><span className={cn("flex h-11 w-11 items-center justify-center rounded-2xl", service.color)}><Icon className="h-5 w-5" /></span><span className="mt-4 block font-extrabold">{service.name}</span><span className="mt-1 block text-sm text-[#778891]">{service.description}</span></button>; })}</div></section>
-      <section className="surface-card rounded-none p-5 md:rounded-[24px] md:p-6"><div className="flex items-center justify-between"><h2 className="text-xl font-extrabold">Ұсынылған мамандар</h2><button className="text-sm font-bold text-[#008F85]">{t.seeAll}</button></div><div className="mt-4 divide-y divide-[#E8EDF0]">{[{ name: "ZakonExpert", type: "Құқықтық сервис", initials: "ZE", tone: "from-[#00A99D] to-[#006E7A]", rating: "4.9" }, { name: "Densaulyq Clinic", type: "Медициналық орталық", initials: "DC", tone: "from-[#367ED1] to-[#2454A3]", rating: "4.8" }, { name: "Bastau Academy", type: "Оқу орталығы", initials: "BA", tone: "from-[#7458D9] to-[#4D399F]", rating: "4.9" }].map((item) => <button key={item.name} className="flex w-full items-center gap-3 py-4 text-left"><Avatar initials={item.initials} tone={item.tone} /><span className="min-w-0 flex-1"><span className="flex items-center gap-1 font-bold">{item.name}<BadgeCheck className="h-4 w-4 fill-[#00A99D] text-white" /></span><span className="mt-0.5 block text-sm text-[#7B8C95]">{item.type}</span></span><span className="rounded-full bg-[#FFF4D8] px-2.5 py-1 text-sm font-extrabold text-[#946311]">★ {item.rating}</span></button>)}</div></section>
-    </div>
-  );
-}
-
-function RightRail({ t, className }: { t: typeof copy.kz; className?: string }) {
-  return (
-    <aside className={cn("sticky top-16 hidden h-[calc(100dvh-4rem)] py-5 xl:block", className)}>
-      <section className="surface-card rounded-[22px] p-5"><div className="flex items-center justify-between"><h2 className="font-extrabold">{t.popular}</h2><Radio className="h-4 w-4 text-[#00A99D]" /></div><div className="mt-4 space-y-4">{[{ topic: "#Қазақстан", count: "12,4 мың жазба" }, { topic: "#Кәсіпкерлік", count: "8,7 мың жазба" }, { topic: "#Алматы", count: "6,2 мың жазба" }, { topic: "#QazaqTech", count: "4,9 мың жазба" }].map((trend, index) => <button key={trend.topic} className="group flex w-full items-start gap-3 text-left"><span className="mt-0.5 text-xs font-black text-[#ABB6BC]">0{index + 1}</span><span><span className="block font-bold transition group-hover:text-[#008F85]">{trend.topic}</span><span className="mt-0.5 block text-xs text-[#8A99A1]">{trend.count}</span></span></button>)}</div></section>
-      <section className="mt-4 overflow-hidden rounded-[22px] bg-[#102F35] p-5 text-white shadow-xl shadow-[#102F35]/10"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-[#66E1D5]"><ShieldCheck /></span><h2 className="mt-4 text-lg font-extrabold">Сенім белгісі</h2><p className="mt-2 text-sm leading-6 text-white/65">Расталған адамдар мен компанияларды бірден таныңыз.</p><Button variant="secondary" size="sm" className="mt-4 rounded-xl bg-white text-[#14333A] hover:bg-[#E7F5F3]">Толығырақ</Button></section>
-    </aside>
-  );
+function AttachmentView({ file, t }: { file: Attachment; t: MessengerCopy }) {
+  return <div className="message-attachment">
+    {/* eslint-disable-next-line @next/next/no-img-element -- Local blob previews must not be sent to an image optimizer. */}
+    {file.kind === "image" && <img src={file.url} alt={file.name} className="attachment-image" />}
+    {file.kind === "audio" && <audio src={file.url} controls preload="metadata" aria-label={file.name} />}
+    <a className="file-download" href={file.url} download={file.name}><FileText /><span><strong>{file.name}</strong><small>{(file.size / 1024).toFixed(0)} KB · {t.download}</small></span></a>
+  </div>;
 }

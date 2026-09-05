@@ -33,7 +33,7 @@ test("built worker renders the messenger and honest demo state", async () => {
   assert.match(html, developmentPreviewMeta);
   assert.match(html, /<html[^>]*lang="ru"/);
   assert.match(html, /<title>Qazyna — мессенджер<\/title>/);
-  assert.match(html, /<h1>Чаты<\/h1>/);
+  assert.match(html, /<h1[^>]*>Чаты<\/h1>/);
   assert.match(html, /Поиск чатов и сообщений/);
   assert.match(html, /Непрочитанные/);
   assert.match(html, /Не отправляется другим людям/);

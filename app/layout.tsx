@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { JeliStoriesDock } from "@/components/jeli-stories-dock";
 import "./globals.css";
 import "./whatsapp-parity.css";
 import "./whatsapp-lock.css";
@@ -6,6 +7,7 @@ import "./whatsapp-desktop-lock.css";
 import "./whatsapp-strict-2026.css";
 import "./qazyna-brand.css";
 import "./product-teal.css";
+import "./jeli-stories.css";
 
 export const metadata: Metadata = {
   title: "JELI — мессенджер",
@@ -20,5 +22,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#18b5ad", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ru"><body>{children}</body></html>;
+  return <html lang="ru"><body>{children}<JeliStoriesDock /></body></html>;
 }

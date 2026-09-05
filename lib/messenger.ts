@@ -1,16 +1,16 @@
 export type Locale = "ru" | "kk";
 export type Text = string | Record<Locale, string>;
 export type Kind = "direct" | "group" | "channel" | "saved";
-export type Filter = "all" | "unread" | "groups" | "channels";
+export type Filter = "all" | "unread" | "favorites" | "groups" | "channels";
 export type Attachment = { name: string; url: string; size: number; kind: "file" | "image" | "audio" };
 export type Message = { id: string; body: Text; mine: boolean; at: string; sender?: string; replyTo?: string; edited?: boolean; attachment?: Attachment };
-export type Thread = { id: string; name: Text; initials: string; color: string; kind: Kind; unread: number; pinned: boolean; muted: boolean; archived: boolean; following?: boolean; members?: string[]; order: number };
+export type Thread = { id: string; name: Text; initials: string; color: string; kind: Kind; unread: number; pinned: boolean; favorite: boolean; muted: boolean; archived: boolean; following?: boolean; members?: string[]; order: number };
 export type MessengerState = { threads: Thread[]; messages: Record<string, Message[]> };
 export type Action =
   | { type: "send"; chatId: string; message: Message }
   | { type: "edit"; chatId: string; messageId: string; body: string }
   | { type: "remove"; chatId: string; messageId: string }
-  | { type: "read" | "pin" | "mute" | "archive" | "follow"; chatId: string }
+  | { type: "read" | "pin" | "favorite" | "mute" | "archive" | "follow"; chatId: string }
   | { type: "create"; thread: Thread };
 
 export const contacts = [
@@ -27,15 +27,15 @@ export const MAX_SESSION_ATTACHMENT_BYTES = 30 * 1024 * 1024;
 
 const at = (time: string) => `2026-09-04T${time}:00+05:00`;
 const pair = (ru: string, kk: string): Text => ({ ru, kk });
-const thread = (id: string, name: Text, initials: string, color: string, kind: Kind, order: number, extra: Partial<Thread> = {}): Thread => ({ id, name, initials, color, kind, order, unread: 0, pinned: false, muted: false, archived: false, ...extra });
+const thread = (id: string, name: Text, initials: string, color: string, kind: Kind, order: number, extra: Partial<Thread> = {}): Thread => ({ id, name, initials, color, kind, order, unread: 0, pinned: false, favorite: false, muted: false, archived: false, ...extra });
 
 // Fictional fixtures only. No contacts are imported and no real users are online.
 export function createDemoState(): MessengerState {
   return {
     threads: [
       thread("saved", pair("Избранное", "Таңдаулы"), "", "#5b9ecd", "saved", 1, { pinned: true }),
-      thread("aigerim", "Айгерим", "А", "#be6978", "direct", 9, { pinned: true, unread: 2 }),
-      thread("family", pair("Семья", "Отбасы"), "", "#71a48c", "group", 8, { unread: 3, members: ["aigerim", "daniyar", "asqar"] }),
+      thread("aigerim", "Айгерим", "А", "#be6978", "direct", 9, { pinned: true, favorite: true, unread: 2 }),
+      thread("family", pair("Семья", "Отбасы"), "", "#71a48c", "group", 8, { favorite: true, unread: 3, members: ["aigerim", "daniyar", "asqar"] }),
       thread("daniyar", "Данияр", "Д", "#658db5", "direct", 7),
       thread("team", pair("Наша команда", "Біздің команда"), "", "#aa8a60", "group", 6, { muted: true, members: ["madi", "asqar"] }),
       thread("asqar", "Асқар", "А", "#b28b52", "direct", 5, { unread: 1 }),
@@ -70,8 +70,8 @@ export function selectThreads(state: MessengerState, filter: Filter, query: stri
   return state.threads.filter(t => {
     if (t.archived !== archived) return false;
 
-    // WhatsApp keeps channels in Updates rather than mixing them with Chats.
-    // The internal "channels" filter is retained for the Updates surface only.
+    // WhatsApp keeps channels away from the default All list. The internal
+    // channels filter is retained for the Updates surface only.
     if (t.kind === "channel") {
       if (filter !== "channels" || !t.following) return false;
     } else if (filter === "channels") {
@@ -79,6 +79,7 @@ export function selectThreads(state: MessengerState, filter: Filter, query: stri
     }
 
     if (filter === "unread" && !t.unread) return false;
+    if (filter === "favorites" && !t.favorite) return false;
     if (filter === "groups" && t.kind !== "group") return false;
     return !search || localize(t.name, locale).toLocaleLowerCase().includes(search) || (state.messages[t.id] ?? []).some(m => localize(m.body, locale).toLocaleLowerCase().includes(search));
   }).sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.order - a.order);
@@ -113,6 +114,7 @@ export function messengerReducer(state: MessengerState, action: Action): Messeng
     if (t.id !== chat.id) return t;
     if (action.type === "read") return { ...t, unread: 0 };
     if (action.type === "pin") return { ...t, pinned: !t.pinned };
+    if (action.type === "favorite" && t.kind !== "channel" && t.kind !== "saved") return { ...t, favorite: !t.favorite };
     if (action.type === "mute") return { ...t, muted: !t.muted };
     if (action.type === "archive") return { ...t, archived: !t.archived };
     if (action.type === "follow" && t.kind === "channel") return { ...t, following: !t.following };

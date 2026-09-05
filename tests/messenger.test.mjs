@@ -54,6 +54,17 @@ test("replies remain within their thread and do not point to missing messages", 
   assert.equal(send(state, "aigerim", outgoing("Ответ", { replyTo: "d1" })).messages.aigerim.at(-1).replyTo, undefined);
 });
 
+test("starred messages stay in their original chat instead of being copied to Message Yourself", () => {
+  const before = createDemoState();
+  const selfCount = before.messages.saved.length;
+  let after = reduce(before, { type: "star", chatId: "aigerim", messageId: "a1" });
+  assert.equal(after.messages.aigerim.find(m => m.id === "a1").starred, true);
+  assert.equal(after.messages.saved.length, selfCount);
+  after = reduce(after, { type: "star", chatId: "aigerim", messageId: "a1" });
+  assert.equal(after.messages.aigerim.find(m => m.id === "a1").starred, false);
+  assert.equal(localize(after.threads.find(t => t.id === "saved").name, "ru"), "Вы");
+});
+
 test("only own messages can be edited or removed", () => {
   const state = createDemoState();
   let next = reduce(state, { type: "edit", chatId: "aigerim", messageId: "a1", body: "Wrong author" });

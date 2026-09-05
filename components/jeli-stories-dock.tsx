@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -12,22 +13,21 @@ export function JeliStoriesDock() {
   useEffect(() => {
     if (window.location.pathname !== "/") return;
     const refresh = () => setLocalStories(readLocalStories().filter(story => new Date(story.expiresAt).getTime() > Date.now()));
-    refresh();
-    window.addEventListener("storage", refresh);
     const panel = document.querySelector<HTMLElement>(".inbox-panel");
-    if (!panel) {
-      setVisible(true);
-      return () => window.removeEventListener("storage", refresh);
-    }
     const syncView = () => {
-      const label = panel.getAttribute("aria-label") ?? "";
-      setVisible(label === "Чаты" || label === "Чаттар");
+      const label = panel?.getAttribute("aria-label") ?? "";
+      setVisible(!panel || label === "Чаты" || label === "Чаттар");
     };
-    syncView();
-    const observer = new MutationObserver(syncView);
-    observer.observe(panel, { attributes: true, attributeFilter: ["aria-label"] });
+    const timer = window.setTimeout(() => {
+      refresh();
+      syncView();
+    }, 0);
+    window.addEventListener("storage", refresh);
+    const observer = panel ? new MutationObserver(syncView) : null;
+    observer?.observe(panel!, { attributes: true, attributeFilter: ["aria-label"] });
     return () => {
-      observer.disconnect();
+      window.clearTimeout(timer);
+      observer?.disconnect();
       window.removeEventListener("storage", refresh);
     };
   }, []);

@@ -1,0 +1,6 @@
+/* BotJeli must stay inside the normal messenger UI, not look like a separate dashboard. */
+.chat-panel[aria-label="BotJeli"] .chat-identity small{font-size:0}.chat-panel[aria-label="BotJeli"] .chat-identity small::after{content:"Системный бот";font-size:11px;color:var(--wa-secondary)}
+.chat-panel[aria-label="BotJeli"] .chat-header-actions>.audio-call,.chat-panel[aria-label="BotJeli"] .chat-header-actions>.header-divider,.chat-panel[aria-label="BotJeli"] .chat-header-actions>button:first-child{display:none!important}
+.chat-panel[aria-label="BotJeli"] .chat-identity .avatar{background:linear-gradient(135deg,#20c878,#229ed9)!important;color:#fff;font-size:18px}
+.chat-panel[aria-label="BotJeli"] .message-row:not(.outgoing) .message-bubble{border:1px solid #d8ebe8;box-shadow:0 1px 1px #0b3b4210}
+.chat-panel[aria-label="BotJeli"] .composer{border-top-color:#d9ebe8}

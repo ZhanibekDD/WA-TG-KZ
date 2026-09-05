@@ -79,7 +79,7 @@ jobs:
           cat /tmp/qazyna-server.log
           exit 1
 
-      - name: Capture mobile parity screens
+      - name: Capture mobile messenger screens
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
@@ -101,7 +101,7 @@ jobs:
           playwright-cli screenshot --filename=visual-artifacts/05-calls-390x844.png
           playwright-cli close
 
-      - name: Capture mobile 412 parity screen
+      - name: Capture mobile 412 messenger screens
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
@@ -114,7 +114,7 @@ jobs:
           playwright-cli screenshot --filename=visual-artifacts/07-chat-412x915.png
           playwright-cli close
 
-      - name: Capture desktop parity screen
+      - name: Capture desktop messenger screen
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
@@ -125,10 +125,22 @@ jobs:
           playwright-cli screenshot --filename=visual-artifacts/08-desktop-1440x900.png
           playwright-cli close
 
+      - name: Capture Bot Studio screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+        run: |
+          PLAYWRIGHT_CLI_SESSION=qazyna-bots-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open http://127.0.0.1:3000/bots
+          PLAYWRIGHT_CLI_SESSION=qazyna-bots-mobile playwright-cli screenshot --filename=visual-artifacts/09-bot-studio-390x844.png
+          PLAYWRIGHT_CLI_SESSION=qazyna-bots-mobile playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=qazyna-bots-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open http://127.0.0.1:3000/bots
+          PLAYWRIGHT_CLI_SESSION=qazyna-bots-desktop playwright-cli screenshot --filename=visual-artifacts/10-bot-studio-1440x900.png
+          PLAYWRIGHT_CLI_SESSION=qazyna-bots-desktop playwright-cli close
+
       - name: Upload visual captures
         uses: actions/upload-artifact@v4
         with:
-          name: whatsapp-parity-screenshots
+          name: qazyna-ui-screenshots
           path: visual-artifacts/*.png
           if-no-files-found: error
           retention-days: 14

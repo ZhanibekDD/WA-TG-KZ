@@ -9,6 +9,7 @@
   --accent-foreground: var(--wa-green-strong);
   --chat-paper: var(--wa-chat);
   --outgoing: var(--wa-outgoing);
+  --wa-hover: #f5f6f6;
 }
 
 .title-row.normal-title {
@@ -118,6 +119,166 @@
 
 .whatsapp-contact-picker > button {
   min-height: 64px;
+}
+
+/* Updates keeps Status and Channels visually separate. The horizontal status
+   tray mirrors the compact Android layout used when channels are present. */
+.updates-list {
+  padding-top: 2px;
+}
+
+.updates-list > .section-heading:first-child {
+  padding: 9px 16px 2px;
+}
+
+.updates-list > .status-row {
+  display: inline-flex;
+  width: 88px;
+  min-height: 104px;
+  vertical-align: top;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 8px 5px 13px;
+  text-align: center;
+}
+
+.updates-list > .status-row:hover {
+  background: transparent;
+}
+
+.updates-list > .status-row .status-ring {
+  width: 58px;
+  height: 58px;
+  flex-basis: 58px;
+  padding: 3px;
+}
+
+.updates-list > .status-row .status-ring > svg {
+  width: 48px;
+  height: 48px;
+}
+
+.updates-list > .status-row .avatar.small {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+}
+
+.updates-list > .status-row > span:last-child {
+  width: 100%;
+}
+
+.updates-list > .status-row strong,
+.updates-list > .status-row small {
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.updates-list > .status-row strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.updates-list > .status-row small {
+  display: none;
+}
+
+.updates-list > .section-divider {
+  margin: 2px 0 7px;
+  height: 8px;
+}
+
+.updates-list > .section-heading:not(:first-child) {
+  min-height: 44px;
+  padding: 6px 17px 3px;
+}
+
+.updates-list > .section-heading h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.updates-list > .section-description {
+  margin: 2px 17px 11px;
+  color: var(--wa-secondary) !important;
+  font-size: 12px;
+}
+
+.updates-list .channel-discover {
+  min-height: 66px;
+  padding: 8px 14px;
+}
+
+.updates-list .subscribe-small {
+  min-width: 82px;
+  border-radius: 18px;
+  background: var(--wa-chip-active);
+  color: var(--wa-green-strong);
+  font-weight: 600;
+}
+
+/* Honest empty-state versions of Communities and Calls use WhatsApp spacing
+   without inventing fake memberships or call history. */
+.communities-empty,
+.calls-empty {
+  align-items: flex-start;
+  gap: 0;
+  padding: 24px 20px 32px;
+  text-align: left;
+  color: var(--wa-secondary);
+}
+
+.communities-empty .empty-icon,
+.calls-empty .empty-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 0 18px;
+  border-radius: 50%;
+  background: var(--wa-chip-active);
+  color: var(--wa-green-strong);
+}
+
+.communities-empty .empty-icon svg,
+.calls-empty .empty-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.communities-empty strong,
+.calls-empty strong {
+  color: var(--wa-text);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.communities-empty p,
+.calls-empty p {
+  max-width: 330px;
+  margin: 8px 0 18px;
+  color: var(--wa-secondary) !important;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.communities-empty .primary-button,
+.calls-empty .primary-button {
+  width: auto;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.communities-empty > small,
+.calls-empty > small {
+  display: none;
 }
 
 @media (max-width: 899px) {
@@ -235,5 +396,23 @@
   .new-group-form .contact-checkbox {
     min-height: 66px;
     padding: 7px 2px;
+  }
+
+  .updates-list > .section-heading:first-child {
+    padding-top: 5px;
+  }
+
+  .updates-list > .status-row {
+    width: 86px;
+  }
+
+  .communities-empty,
+  .calls-empty {
+    padding: 22px 18px 28px;
+  }
+
+  .communities-empty p,
+  .calls-empty p {
+    max-width: 300px;
   }
 }

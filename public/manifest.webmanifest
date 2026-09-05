@@ -10,13 +10,6 @@
   "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }],
   "shortcuts": [
     {
-      "name": "Bot Studio",
-      "short_name": "Bots",
-      "description": "Создание и управление JELI-ботами",
-      "url": "/bots",
-      "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
-    },
-    {
       "name": "Stories",
       "short_name": "Stories",
       "description": "Истории JELI",

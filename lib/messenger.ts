@@ -60,7 +60,7 @@ function botJeliResponse(list: Message[], body: string, seed: string): Message {
   }
 
   if (normalized === "/mybots") {
-    const bots = list.filter(message => message.botMeta).map(message => message.botMeta!);
+    const bots = list.filter(message => message.botMeta?.username).map(message => message.botMeta!);
     const unique = [...new Map(bots.map(bot => [bot.username, bot])).values()];
     if (!unique.length) return botReply(seed, pair(
       "У вас пока нет ботов в этой сессии. Отправьте /newbot, чтобы создать первого.",
@@ -78,7 +78,7 @@ function botJeliResponse(list: Message[], body: string, seed: string): Message {
     return botReply(seed, pair(
       `Отлично: ${name}. Теперь придумайте username.\n\nОн должен быть латиницей, длиной 5–32 символа и заканчиваться на bot. Например: zakonexpert_bot`,
       `Жақсы: ${name}. Енді username ойлап табыңыз.\n\nОл латын әріптерімен, 5–32 таңба және bot сөзімен аяқталуы керек. Мысалы: zakonexpert_bot`,
-    ), "ask-username");
+    ), "ask-username", { name, username: "" });
   }
 
   if (lastBot?.botFlow === "ask-username") {
@@ -87,9 +87,8 @@ function botJeliResponse(list: Message[], body: string, seed: string): Message {
     if (!valid) return botReply(seed, pair(
       "Такой username не подходит. Используйте 5–32 латинских символа/цифры/_ и окончание bot.\n\nПример: zakonexpert_bot",
       "Бұл username сәйкес емес. 5–32 латын таңбасын/санын/_ және bot аяқталуын қолданыңыз.\n\nМысалы: zakonexpert_bot",
-    ), "ask-username");
-    const previousName = [...list].reverse().find(message => message.mine)?.body;
-    const name = typeof previousName === "string" ? previousName.slice(0, 64) : "JELI Bot";
+    ), "ask-username", lastBot.botMeta);
+    const name = lastBot.botMeta?.name ?? "JELI Bot";
     const token = `jeli_demo_${seed.replace(/[^A-Za-z0-9]/g, "").slice(-24)}`;
     return botReply(seed, pair(
       `Готово. Бот создан в локальном режиме.\n\n${name}\n@${username}\n\nTest token:\n${token}\n\nНе публикуйте токен. Сейчас он работает только как демонстрация этой вкладки.\n\n/mybots — мои боты\n/newbot — создать ещё`,

@@ -97,6 +97,18 @@ test("archive, pinned ordering, mute and restoration are reversible", () => {
   assert.equal(state.threads.find(t => t.id === "daniyar").archived, false);
 });
 
+test("Favorites are a real chat list independent from pinning and starred messages", () => {
+  let state = createDemoState();
+  assert.deepEqual(ids(selectThreads(state, "favorites", "", false, "ru")), ["aigerim", "family"]);
+  state = reduce(state, { type: "favorite", chatId: "daniyar" });
+  assert.ok(ids(selectThreads(state, "favorites", "", false, "ru")).includes("daniyar"));
+  state = reduce(state, { type: "favorite", chatId: "aigerim" });
+  assert.ok(!ids(selectThreads(state, "favorites", "", false, "ru")).includes("aigerim"));
+  const beforeChannel = state.threads.find(t => t.id === "qazyna");
+  state = reduce(state, { type: "favorite", chatId: "qazyna" });
+  assert.equal(state.threads.find(t => t.id === "qazyna").favorite, beforeChannel.favorite);
+});
+
 test("search matches localised names and message bodies without mixing channels into Chats", () => {
   const state = createDemoState();
   assert.deepEqual(ids(selectThreads(state, "all", "  ОТБАСЫ ", false, "kk")), ["family"]);
@@ -120,7 +132,7 @@ test("following changes Updates membership without leaking channels into Chats",
 
 test("created groups have their own conversation and duplicate IDs do not overwrite data", () => {
   const before = createDemoState();
-  const thread = { id: "new-group", name: "Друзья", initials: "", color: "#638eae", kind: "group", members: ["aigerim", "daniyar"], unread: 0, pinned: false, muted: false, archived: false, order: 10 };
+  const thread = { id: "new-group", name: "Друзья", initials: "", color: "#638eae", kind: "group", members: ["aigerim", "daniyar"], unread: 0, pinned: false, favorite: false, muted: false, archived: false, order: 10 };
   let after = reduce(before, { type: "create", thread });
   assert.deepEqual(after.messages["new-group"], []);
   after = send(after, "new-group");

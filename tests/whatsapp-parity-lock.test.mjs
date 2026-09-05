@@ -10,7 +10,8 @@ test("mobile chats preserve the current WhatsApp information zones", () => {
   for (const view of ["chats", "updates", "communities", "calls"]) {
     assert.ok(page.includes(`id: "${view}"`));
   }
-  assert.match(page, /\["all", "unread", "groups"\]/);
+  assert.match(page, /\["all", "unread", "favorites", "groups"\]/);
+  assert.match(page, /filterLabel/);
   assert.match(page, /Camera/);
   assert.match(page, /MessageSquarePlus/);
   assert.match(parity, /grid-template-columns: repeat\(4/);
@@ -22,11 +23,19 @@ test("top overflow and message actions use contextual menus", () => {
   assert.match(page, /className="context-menu app-menu"/);
   assert.match(page, /Новая группа/);
   assert.match(page, /Связанные устройства/);
+  assert.match(page, /Избранные сообщения/);
   assert.match(page, /ContextMenu\.Root/);
   assert.match(page, /message-context-menu/);
   assert.doesNotMatch(page, /ChevronDown/);
   assert.match(lock, /\.app-menu/);
   assert.match(lock, /\.message-context-menu/);
+});
+
+test("Favorites are distinct from starred messages and exposed as a chat action", () => {
+  assert.match(page, /type: "pin" \| "favorite" \| "mute" \| "archive"/);
+  assert.match(page, /act\("favorite"\)/);
+  assert.match(page, /Добавить в избранное/);
+  assert.match(page, /Убрать из избранного/);
 });
 
 test("New chat keeps the WhatsApp select-contact hierarchy on mobile", () => {

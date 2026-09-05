@@ -37,7 +37,7 @@ test("send rejects empty, oversized, forged incoming and duplicate messages", ()
 
 test("channels remain read-only, including followed channels", () => {
   const state = createDemoState();
-  assert.equal(send(state, "qazyna"), state);
+  assert.equal(send(state, "jeli"), state);
   assert.equal(send(state, "qazaqtech"), state);
 });
 
@@ -96,6 +96,7 @@ test("opening a chat clears its unread count and updates the unread filter", () 
 
 test("archive, pinned ordering, mute and restoration are reversible", () => {
   let state = createDemoState();
+  state = reduce(state, { type: "pin", chatId: "botjeli" });
   assert.equal(ids(selectThreads(state, "all", "", false, "ru"))[0], "aigerim");
   state = reduce(state, { type: "pin", chatId: "aigerim" });
   assert.equal(ids(selectThreads(state, "all", "", false, "ru"))[0], "saved");
@@ -115,9 +116,9 @@ test("Favorites are a real chat list independent from pinning and starred messag
   assert.ok(ids(selectThreads(state, "favorites", "", false, "ru")).includes("daniyar"));
   state = reduce(state, { type: "favorite", chatId: "aigerim" });
   assert.ok(!ids(selectThreads(state, "favorites", "", false, "ru")).includes("aigerim"));
-  const beforeChannel = state.threads.find(t => t.id === "qazyna");
-  state = reduce(state, { type: "favorite", chatId: "qazyna" });
-  assert.equal(state.threads.find(t => t.id === "qazyna").favorite, beforeChannel.favorite);
+  const beforeChannel = state.threads.find(t => t.id === "jeli");
+  state = reduce(state, { type: "favorite", chatId: "jeli" });
+  assert.equal(state.threads.find(t => t.id === "jeli").favorite, beforeChannel.favorite);
 });
 
 test("search matches localised names and message bodies without mixing channels into Chats", () => {
@@ -126,14 +127,14 @@ test("search matches localised names and message bodies without mixing channels 
   assert.deepEqual(ids(selectThreads(state, "all", "19:00", false, "ru")), ["aigerim"]);
   assert.deepEqual(selectThreads(state, "all", "Планы на выходные", false, "ru"), []);
   assert.deepEqual(ids(selectThreads(state, "groups", "", false, "ru")), ["family", "team"]);
-  assert.deepEqual(ids(selectThreads(state, "channels", "", false, "ru")), ["qazyna"]);
-  assert.ok(!ids(selectThreads(state, "all", "", false, "ru")).includes("qazyna"));
+  assert.deepEqual(ids(selectThreads(state, "channels", "", false, "ru")), ["jeli"]);
+  assert.ok(!ids(selectThreads(state, "all", "", false, "ru")).includes("jeli"));
   assert.equal(localize(state.threads.find(t => t.id === "family").name, "ru"), "Семья");
 });
 
 test("following changes Updates membership without leaking channels into Chats", () => {
   const before = createDemoState();
-  assert.ok(!ids(selectThreads(before, "all", "", false, "ru")).includes("qazyna"));
+  assert.ok(!ids(selectThreads(before, "all", "", false, "ru")).includes("jeli"));
   const after = reduce(before, { type: "follow", chatId: "qazaqtech" });
   assert.ok(ids(selectThreads(after, "channels", "", false, "ru")).includes("qazaqtech"));
   assert.ok(!ids(selectThreads(after, "all", "", false, "ru")).includes("qazaqtech"));

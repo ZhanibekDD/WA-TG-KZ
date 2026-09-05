@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./whatsapp-parity.css";
+import "./whatsapp-lock.css";
 
 export const metadata: Metadata = {
   title: "Qazyna — мессенджер",

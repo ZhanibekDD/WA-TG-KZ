@@ -40,3 +40,95 @@ jobs:
 
       - name: Tests
         run: node --experimental-strip-types --test tests/*.test.mjs
+
+  visual-capture:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Playwright CLI and Chromium
+        run: |
+          npm install -g @playwright/cli@latest
+          playwright-cli install-browser --with-deps
+
+      - name: Start production server
+        run: |
+          nohup npm run start -- --port 3000 --hostname 127.0.0.1 > /tmp/qazyna-server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/qazyna-server.log
+          exit 1
+
+      - name: Capture mobile parity screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: qazyna-mobile-390
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 390x844
+        run: |
+          mkdir -p visual-artifacts
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli screenshot --filename=visual-artifacts/01-chats-390x844.png
+          playwright-cli click 'role=button[name="Айгерим"]'
+          playwright-cli screenshot --filename=visual-artifacts/02-chat-390x844.png
+          playwright-cli click 'role=button[name="Назад"]'
+          playwright-cli click 'role=button[name="Новый чат"]'
+          playwright-cli screenshot --filename=visual-artifacts/03-new-chat-390x844.png
+          playwright-cli click 'role=button[name="Закрыть"]'
+          playwright-cli click 'role=button[name="Обновления"]'
+          playwright-cli screenshot --filename=visual-artifacts/04-updates-390x844.png
+          playwright-cli click 'role=button[name="Звонки"]'
+          playwright-cli screenshot --filename=visual-artifacts/05-calls-390x844.png
+          playwright-cli close
+
+      - name: Capture mobile 412 parity screen
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: qazyna-mobile-412
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 412x915
+        run: |
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli screenshot --filename=visual-artifacts/06-chats-412x915.png
+          playwright-cli click 'role=button[name="Айгерим"]'
+          playwright-cli screenshot --filename=visual-artifacts/07-chat-412x915.png
+          playwright-cli close
+
+      - name: Capture desktop parity screen
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: qazyna-desktop-1440
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 1440x900
+        run: |
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli screenshot --filename=visual-artifacts/08-desktop-1440x900.png
+          playwright-cli close
+
+      - name: Upload visual captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: whatsapp-parity-screenshots
+          path: visual-artifacts/*.png
+          if-no-files-found: error
+          retention-days: 14

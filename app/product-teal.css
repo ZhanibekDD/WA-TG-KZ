@@ -43,11 +43,42 @@ body {
   color: var(--qz-primary-strong);
 }
 
+/* Replace the old prototype wordmark without touching messenger geometry. */
 .brand-row > span:first-child {
+  font-size: 0 !important;
+  background: none !important;
+  color: transparent !important;
+}
+.brand-row > span:first-child::after {
+  content: "JELI";
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.04em;
   background: linear-gradient(110deg, var(--qz-green), var(--qz-sky));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.wordmark-icon {
+  overflow: hidden;
+  font-size: 0 !important;
+  background-image: url('/jeli-icon.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+.welcome-panel h2 {
+  font-size: 0 !important;
+}
+.welcome-panel h2::after {
+  content: "JELI";
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -.04em;
 }
 
 .wordmark-icon,

@@ -7,7 +7,7 @@ JELI строится по простой формуле: основной ме�
 ## Продуктовая формула
 
 - Chats / открытая переписка / New Chat / нижняя навигация: WhatsApp-like UX и плотность.
-- Stories: компактная лента над чатами + тёмный полноэкранный Telegram-like viewer.
+- Stories: компактная лента только на списке Chats + тёмный полноэкранный Telegram-like viewer.
 - Bots: только системный чат **BotJeli**, без отдельной пользовательской админ-панели.
 - Платформенные возможности: каналы, сообщества, Mini Apps, AI/business bots — за понятными точками входа, без перегрузки Chats.
 - Визуальная идентичность: JELI teal, зелёный × голубой, собственный круглый знак.
@@ -18,10 +18,10 @@ JELI строится по простой формуле: основной ме�
 | Сценарий | Реализация в этой версии |
 |---|---|
 | Главный экран | Список чатов, поиск, архив, фильтры «Все / Непрочитанные / Избранное / Группы» |
-| Stories rail | Компактные аватары над Chats, не вытесняют список чатов |
+| Stories rail | Компактные аватары над Chats; автоматически исчезают при открытии разговора на мобильном |
 | Stories viewer | Тёмный fullscreen viewer; mobile = весь экран, desktop = вертикальная карточка по центру |
 | Story actions | Prev/next, reply, reaction, privacy, duration, archive, pinned profile stories |
-| BotJeli | Обычный системный чат в списке сообщений |
+| BotJeli | Обычный закреплённый системный чат в списке сообщений |
 | Создание бота | `/newbot` → имя → username → локальный test token прямо в переписке |
 | Управление ботами | `/mybots`, `/help`; production Bot API подключается позже |
 | Favorites | Отдельный список любимых чатов, не связанный с pinning |
@@ -42,6 +42,7 @@ Stories используют `lib/jeli-stories.ts`. Созданные поль�
 
 Текущий UX:
 - компактная лента над Chats;
+- лента скрывается при открытии мобильного чата и не перекрывает сообщения;
 - fullscreen viewer без отдельной белой «веб-страницы»;
 - реакции и reply;
 - privacy: Everyone / Contacts / Close Friends / Selected Contacts;
@@ -58,8 +59,9 @@ Stories используют `lib/jeli-stories.ts`. Созданные поль�
 1. `/newbot`;
 2. BotJeli спрашивает имя;
 3. BotJeli спрашивает username, который заканчивается на `bot`;
-4. после валидного username выдаётся `jeli_demo_...` test token;
-5. `/mybots` показывает ботов, созданных в текущей сессии.
+4. невалидный username можно исправить без потери введённого имени;
+5. после валидного username выдаётся `jeli_demo_...` test token;
+6. `/mybots` показывает ботов, созданных в текущей сессии.
 
 Production roadmap: server-issued token, `getMe`, signed webhooks, rotate/revoke, scopes, Mini Apps, AI bots, no-code automation и audit log.
 

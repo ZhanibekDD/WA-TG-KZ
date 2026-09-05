@@ -125,17 +125,19 @@ jobs:
           playwright-cli screenshot --filename=visual-artifacts/08-desktop-1440x900.png
           playwright-cli close
 
-      - name: Capture Bot Studio screens
+      - name: Capture BotJeli inside messenger
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
         run: |
-          PLAYWRIGHT_CLI_SESSION=jeli-bots-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open http://127.0.0.1:3000/bots
-          PLAYWRIGHT_CLI_SESSION=jeli-bots-mobile playwright-cli screenshot --filename=visual-artifacts/09-bot-studio-390x844.png
-          PLAYWRIGHT_CLI_SESSION=jeli-bots-mobile playwright-cli close
-          PLAYWRIGHT_CLI_SESSION=jeli-bots-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open http://127.0.0.1:3000/bots
-          PLAYWRIGHT_CLI_SESSION=jeli-bots-desktop playwright-cli screenshot --filename=visual-artifacts/10-bot-studio-1440x900.png
-          PLAYWRIGHT_CLI_SESSION=jeli-bots-desktop playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open http://127.0.0.1:3000/
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile playwright-cli click 'role=button[name="BotJeli"]'
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile playwright-cli screenshot --filename=visual-artifacts/09-botjeli-chat-390x844.png
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open http://127.0.0.1:3000/
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop playwright-cli click 'role=button[name="BotJeli"]'
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop playwright-cli screenshot --filename=visual-artifacts/10-botjeli-chat-1440x900.png
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop playwright-cli close
 
       - name: Capture Stories screens
         env:

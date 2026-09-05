@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Dialog, DropdownMenu, Popover } from "radix-ui";
-import { Archive, ArrowLeft, BellOff, Bookmark, Camera, Check, ChevronDown, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Palette, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Shield, Smile, Trash2, UsersRound, Video, X } from "lucide-react";
+import { ContextMenu, Dialog, DropdownMenu, Popover } from "radix-ui";
+import { Archive, ArrowLeft, BellOff, Bookmark, Camera, Check, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Shield, Smile, Trash2, UsersRound, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +26,10 @@ function MenuItem({ children, action, danger = false }: { children: ReactNode; a
   return <DropdownMenu.Item className={cn("menu-item", danger && "danger")} onSelect={action}>{children}</DropdownMenu.Item>;
 }
 
+function ContextItem({ children, action, danger = false }: { children: ReactNode; action: () => void; danger?: boolean }) {
+  return <ContextMenu.Item className={cn("menu-item", danger && "danger")} onSelect={action}>{children}</ContextMenu.Item>;
+}
+
 function ChatMenu({ chat, t, act }: { chat: Thread; t: MessengerCopy; act: (type: "pin" | "mute" | "archive") => void }) {
   return <DropdownMenu.Root>
     <DropdownMenu.Trigger asChild><Button variant="ghost" size="icon" className="icon-button" aria-label={t.more}><MoreVertical /></Button></DropdownMenu.Trigger>
@@ -40,14 +44,12 @@ function ChatMenu({ chat, t, act }: { chat: Thread; t: MessengerCopy; act: (type
 export default function HomePage() {
   const [state, dispatch] = useReducer(messengerReducer, undefined, createDemoState);
   const [locale, setLocale] = useState<Locale>("ru");
-  const [accent, setAccent] = useState<"green" | "blue">("green");
   const [view, setView] = useState<View>("chats");
   const [activeId, setActiveId] = useState("aigerim");
   const [opened, setOpened] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [archived, setArchived] = useState(false);
-  const [listSearchOpen, setListSearchOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [messageQuery, setMessageQuery] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -63,17 +65,19 @@ export default function HomePage() {
   const [viewedStatus, setViewedStatus] = useState<{ name: string; text: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const composeRef = useRef<HTMLTextAreaElement>(null);
+  const listSearchRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const modalOpener = useRef<HTMLElement | null>(null);
   const focusComposerAfterMenu = useRef(false);
   const fileUrls = useRef(new Map<string, number>());
+
   const t = messengerCopy[locale];
   const active = state.threads.find(chat => chat.id === activeId)!;
   const messages = state.messages[activeId] ?? [];
   const draft = drafts[activeId] ?? emptyDraft;
   const filtered = selectThreads(state, filter, query, archived, locale);
-  const unread = state.threads.filter(chat => !chat.archived).reduce((sum, chat) => sum + chat.unread, 0);
-  const archiveCount = state.threads.filter(chat => chat.archived).length;
+  const unread = state.threads.filter(chat => !chat.archived && chat.kind !== "channel").reduce((sum, chat) => sum + chat.unread, 0);
+  const archiveCount = state.threads.filter(chat => chat.archived && chat.kind !== "channel").length;
   const visibleMessages = messages.filter(message => localize(message.body, locale).toLocaleLowerCase().includes(messageQuery.toLocaleLowerCase()));
   const searchContacts = contacts.filter(contact => contact.name.toLocaleLowerCase().includes(contactQuery.toLocaleLowerCase()));
   const replyMessage = messages.find(message => message.id === draft.replyTo);
@@ -117,7 +121,6 @@ export default function HomePage() {
   function switchView(next: View) {
     setView(next);
     setOpened(false);
-    setListSearchOpen(false);
     setSearchOpen(false);
     setMessageQuery("");
     if (next === "chats") { setArchived(false); setQuery(""); }
@@ -139,7 +142,18 @@ export default function HomePage() {
     composeRef.current?.focus();
   }
   function newChat() {
-    setNewKind("direct"); setGroupName(""); setSelectedContacts([]); setContactQuery(""); setModal("new");
+    setNewKind("direct");
+    setGroupName("");
+    setSelectedContacts([]);
+    setContactQuery("");
+    setModal("new");
+  }
+  function newGroup() {
+    setNewKind("group");
+    setGroupName("");
+    setSelectedContacts([]);
+    setContactQuery("");
+    setModal("new");
   }
   function startDirect(id: string) {
     setView("chats"); setArchived(false); setQuery(""); setFilter("all");
@@ -166,7 +180,6 @@ export default function HomePage() {
     releaseAttachment(draft.attachment);
     const url = URL.createObjectURL(file);
     fileUrls.current.set(url, file.size);
-    // SVG and HTML are download-only; never embed active documents.
     const kind = ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type) ? "image" : file.type.startsWith("audio/") ? "audio" : "file";
     updateDraft({ attachment: { url, name: file.name, size: file.size, kind } });
   }
@@ -179,6 +192,7 @@ export default function HomePage() {
     try { await navigator.clipboard.writeText(localize(message.body, locale)); setNotice(t.copied); }
     catch { setNotice(t.copyError); }
   }
+
   const infoText = active.kind === "channel" ? t.channelInfo : active.kind === "saved" ? t.savedInfo : active.kind === "group" ? t.groupInfo + " · " + ((active.members?.length ?? 0) + 1) + " " + t.memberUnit : t.directInfo;
   const textFor = (message?: Message) => message ? localize(message.body, locale) || (message.attachment?.kind === "image" ? t.photo : message.attachment?.kind === "audio" ? t.audio : t.file) : "";
 
@@ -202,7 +216,10 @@ export default function HomePage() {
     </li>;
   }
 
-  return <main className={cn("messenger-shell", opened && "conversation-open-mobile")} data-accent={accent}>
+  const linkedDevicesNotice = locale === "ru" ? "Связанные устройства появятся после подключения реальных аккаунтов и сессий." : "Байланыстырылған құрылғылар нақты аккаунттар мен сессиялар қосылғаннан кейін пайда болады.";
+  const starredNotice = locale === "ru" ? "Отдельный список избранных сообщений будет подключён вместе с постоянным хранением." : "Таңдаулы хабарламалардың жеке тізімі тұрақты сақтау қосылғанда іске қосылады.";
+
+  return <main className={cn("messenger-shell", opened && "conversation-open-mobile")} data-accent="green">
     <nav className="desktop-rail" aria-label={t.chats}>
       <button className="wordmark-icon" onClick={() => switchView("chats")} aria-label="Qazyna">Q</button>
       {nav.map(item => <button key={item.id} title={item.label} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={cn("rail-button", view === item.id && "active")} onClick={() => switchView(item.id)}><item.icon />{item.id === "chats" && unread > 0 && <span className="rail-dot" />}</button>)}
@@ -216,11 +233,21 @@ export default function HomePage() {
           <span>{view === "chats" ? "Qazyna" : viewLabel}</span>
           <div className="whatsapp-list-actions">
             {view === "chats" && <>
-              <Button variant="ghost" size="icon" className="icon-button" onClick={() => setNotice(locale === "ru" ? "Камера будет подключена в нативном приложении." : "Камера нативті қолданбада қосылады.")} aria-label={locale === "ru" ? "Камера" : "Камера"} title={locale === "ru" ? "Камера" : "Камера"}><Camera /></Button>
-              <Button variant="ghost" size="icon" className="icon-button" onClick={() => setListSearchOpen(value => !value)} aria-label={t.search} title={t.search}><Search /></Button>
+              <Button variant="ghost" size="icon" className="icon-button" onClick={() => setNotice(locale === "ru" ? "Камера будет подключена в нативном приложении." : "Камера нативті қолданбада қосылады.")} aria-label="Камера" title="Камера"><Camera /></Button>
+              <Button variant="ghost" size="icon" className="icon-button top-search-action" onClick={() => listSearchRef.current?.focus()} aria-label={t.search} title={t.search}><Search /></Button>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild><Button variant="ghost" size="icon" className="icon-button app-menu-trigger" aria-label={t.more}><MoreVertical /></Button></DropdownMenu.Trigger>
+                <DropdownMenu.Portal><DropdownMenu.Content className="context-menu app-menu" align="end" sideOffset={4}>
+                  <MenuItem action={newGroup}>{locale === "ru" ? "Новая группа" : "Жаңа топ"}</MenuItem>
+                  <MenuItem action={() => setNotice(linkedDevicesNotice)}>{locale === "ru" ? "Связанные устройства" : "Байланыстырылған құрылғылар"}</MenuItem>
+                  <MenuItem action={() => setNotice(starredNotice)}>{locale === "ru" ? "Избранные" : "Таңдаулы"}</MenuItem>
+                  <MenuItem action={() => switchView("settings")}>{t.settings}</MenuItem>
+                </DropdownMenu.Content></DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </>}
             {view === "calls" && <Button variant="ghost" size="icon" className="icon-button" onClick={() => setModal("call")} aria-label={t.startCall}><Plus /></Button>}
-            <Button variant="ghost" size="icon" className="icon-button" onClick={() => view === "settings" ? switchView("chats") : switchView("settings")} aria-label={view === "settings" ? t.back : t.settings}>{view === "settings" ? <ArrowLeft /> : <MoreVertical />}</Button>
+            {view === "settings" && <Button variant="ghost" size="icon" className="icon-button" onClick={() => switchView("chats")} aria-label={t.back}><ArrowLeft /></Button>}
+            {view !== "chats" && view !== "settings" && <Button variant="ghost" size="icon" className="icon-button" onClick={() => switchView("settings")} aria-label={t.settings}><MoreVertical /></Button>}
           </div>
         </div>
         <div className={cn("title-row", view === "chats" && archived ? "archive-title" : "normal-title")}>
@@ -230,7 +257,7 @@ export default function HomePage() {
       </header>
 
       {view === "chats" && <>
-        <div className={cn("search-box", "chat-list-search", !listSearchOpen && !query && "mobile-search-collapsed")}><Search /><Input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search} />{(query || listSearchOpen) && <button onClick={() => { setQuery(""); setListSearchOpen(false); }} aria-label={t.close}><X /></button>}</div>
+        <div className="search-box chat-list-search"><Search /><Input ref={listSearchRef} value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search} />{query && <button onClick={() => { setQuery(""); listSearchRef.current?.focus(); }} aria-label={t.close}><X /></button>}</div>
         <div className="chat-filters" role="group" aria-label={t.chats}>{(["all", "unread", "groups"] as Filter[]).map(item => <button key={item} aria-pressed={filter === item} className={cn("filter-chip", filter === item && "active")} onClick={() => setFilter(item)}>{t[item]}</button>)}</div>
         <div className="inbox-scroll">
           {!archived && <button className="archive-row" onClick={() => { setArchived(true); setFilter("all"); setQuery(""); }}><Archive /><span>{t.archive}</span><span>{archiveCount}</span></button>}
@@ -251,14 +278,13 @@ export default function HomePage() {
         {state.threads.filter(chat => chat.kind === "channel" && !chat.following).map(chat => <div className="channel-discover" key={chat.id}><button onClick={() => openChat(chat.id)}><Avatar chat={chat} /><span><strong>{localize(chat.name, locale)}</strong><small>{t.channelInfo}</small></span></button><Button variant="secondary" className="subscribe-small" onClick={() => dispatch({ type: "follow", chatId: chat.id })}>{t.follow}</Button></div>)}
       </div>}
 
-      {view === "communities" && <div className="inbox-scroll"><div className="small-empty communities-empty"><span className="empty-icon"><UsersRound /></span><strong>{communitiesLabel}</strong><p>{locale === "ru" ? "Объединяйте связанные группы в одном месте — как в WhatsApp." : "Байланысты топтарды WhatsApp-тағыдай бір жерде біріктіріңіз."}</p><Button className="primary-button" onClick={() => { setNewKind("group"); setGroupName(""); setSelectedContacts([]); setContactQuery(""); setModal("new"); }}><UsersRound />{locale === "ru" ? "Новое сообщество" : "Жаңа қауымдастық"}</Button><small>{t.soon}</small></div></div>}
+      {view === "communities" && <div className="inbox-scroll"><div className="small-empty communities-empty"><span className="empty-icon"><UsersRound /></span><strong>{communitiesLabel}</strong><p>{locale === "ru" ? "Объединяйте связанные группы в одном месте — как в WhatsApp." : "Байланысты топтарды WhatsApp-тағыдай бір жерде біріктіріңіз."}</p><Button className="primary-button" onClick={newGroup}><UsersRound />{locale === "ru" ? "Новое сообщество" : "Жаңа қауымдастық"}</Button><small>{t.soon}</small></div></div>}
 
       {view === "calls" && <div className="inbox-scroll"><div className="small-empty calls-empty"><span className="empty-icon"><Phone /></span><strong>{t.noCalls}</strong><p>{t.callsHint}</p><Button className="primary-button" onClick={() => setModal("call")}><Phone />{t.startCall}</Button><small>{t.soon}</small></div></div>}
 
       {view === "settings" && <div className="inbox-scroll settings-list">
         <div className="settings-profile"><span className="avatar profile"><CircleUserRound /></span><div><strong>{t.me}</strong><small>{t.profileHint}</small></div></div>
         <section className="setting-section"><h2><Languages />{t.language}</h2><div className="segmented" role="group" aria-label={t.language}><button className={locale === "ru" ? "active" : ""} onClick={() => setLocale("ru")} aria-pressed={locale === "ru"}>Русский</button><button className={locale === "kk" ? "active" : ""} onClick={() => setLocale("kk")} aria-pressed={locale === "kk"}>Қазақша</button></div></section>
-        <section className="setting-section"><h2><Palette />{t.appearance}</h2><div className="segmented" role="group" aria-label={t.appearance}><button className={accent === "green" ? "active" : ""} onClick={() => setAccent("green")} aria-pressed={accent === "green"}><i className="color-dot green" />{t.green}</button><button className={accent === "blue" ? "active" : ""} onClick={() => setAccent("blue")} aria-pressed={accent === "blue"}><i className="color-dot blue" />{t.blue}</button></div><p>{t.themeHint}</p></section>
         <button className="settings-row" onClick={() => setModal("about")}><Shield /><span>{t.privacy}</span><ChevronRight /></button>
         <button className="settings-row" onClick={() => { switchView("chats"); openChat("saved"); }}><Bookmark /><span>{t.saved}</span><ChevronRight /></button>
         <button className="settings-row" onClick={() => setModal("about")}><Info /><span>{t.help}</span><ChevronRight /></button>
@@ -287,22 +313,24 @@ export default function HomePage() {
             {visibleMessages.map(message => {
               const quoted = messages.find(item => item.id === message.replyTo);
               return <article className={cn("message-row", message.mine && "outgoing", active.kind === "channel" && "channel-message")} key={message.id}>
-                <div className="message-bubble">
-                  {message.sender && active.kind === "group" && <strong className="message-sender">{message.sender}</strong>}
-                  {message.replyTo && <div className="reply-quote"><strong>{quoted ? quoted.mine ? t.you : quoted.sender || localize(active.name, locale) : t.reply}</strong><span>{quoted ? textFor(quoted) : t.quoteDeleted}</span></div>}
-                  {message.attachment && <AttachmentView file={message.attachment} t={t} />}
-                  {localize(message.body, locale) && <p className="message-body">{localize(message.body, locale)}</p>}
-                  <div className="message-meta">{message.edited && <span>{t.edited}</span>}<time dateTime={message.at}>{clock(message.at)}</time>{message.mine && <span title={t.noDelivery} aria-label={t.noDelivery}><Clock3 /></span>}</div>
-                  <DropdownMenu.Root><DropdownMenu.Trigger asChild><button className="message-menu-trigger" aria-label={t.more}><ChevronDown /></button></DropdownMenu.Trigger>
-                    <DropdownMenu.Portal><DropdownMenu.Content className="context-menu" sideOffset={4} align="end" onCloseAutoFocus={e => { if (focusComposerAfterMenu.current) { e.preventDefault(); focusComposerAfterMenu.current = false; composeRef.current?.focus(); } }}>
-                      {active.kind !== "channel" && <MenuItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ replyTo: message.id, editing: undefined }); }}><Reply />{t.reply}</MenuItem>}
-                      <MenuItem action={() => void copyMessage(message)}><Copy />{t.copy}</MenuItem>
-                      {!message.attachment && <MenuItem action={() => toSaved(message)}><Bookmark />{t.saveTo}</MenuItem>}
-                      {message.mine && <MenuItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ editing: message.id, text: localize(message.body, locale), replyTo: undefined }); }}><Pencil />{t.edit}</MenuItem>}
-                      {message.mine && <MenuItem danger action={() => setDeleteTarget({ chatId: activeId, messageId: message.id })}><Trash2 />{t.delete}</MenuItem>}
-                    </DropdownMenu.Content></DropdownMenu.Portal>
-                  </DropdownMenu.Root>
-                </div>
+                <ContextMenu.Root>
+                  <ContextMenu.Trigger asChild>
+                    <div className="message-bubble">
+                      {message.sender && active.kind === "group" && <strong className="message-sender">{message.sender}</strong>}
+                      {message.replyTo && <div className="reply-quote"><strong>{quoted ? quoted.mine ? t.you : quoted.sender || localize(active.name, locale) : t.reply}</strong><span>{quoted ? textFor(quoted) : t.quoteDeleted}</span></div>}
+                      {message.attachment && <AttachmentView file={message.attachment} t={t} />}
+                      {localize(message.body, locale) && <p className="message-body">{localize(message.body, locale)}</p>}
+                      <div className="message-meta">{message.edited && <span>{t.edited}</span>}<time dateTime={message.at}>{clock(message.at)}</time>{message.mine && <span title={t.noDelivery} aria-label={t.noDelivery}><Clock3 /></span>}</div>
+                    </div>
+                  </ContextMenu.Trigger>
+                  <ContextMenu.Portal><ContextMenu.Content className="context-menu message-context-menu" sideOffset={6} alignOffset={0} onCloseAutoFocus={e => { if (focusComposerAfterMenu.current) { e.preventDefault(); focusComposerAfterMenu.current = false; composeRef.current?.focus(); } }}>
+                    {active.kind !== "channel" && <ContextItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ replyTo: message.id, editing: undefined }); }}><Reply />{t.reply}</ContextItem>}
+                    <ContextItem action={() => void copyMessage(message)}><Copy />{t.copy}</ContextItem>
+                    {!message.attachment && <ContextItem action={() => toSaved(message)}><Bookmark />{t.saveTo}</ContextItem>}
+                    {message.mine && <ContextItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ editing: message.id, text: localize(message.body, locale), replyTo: undefined }); }}><Pencil />{t.edit}</ContextItem>}
+                    {message.mine && <ContextItem danger action={() => setDeleteTarget({ chatId: activeId, messageId: message.id })}><Trash2 />{t.delete}</ContextItem>}
+                  </ContextMenu.Content></ContextMenu.Portal>
+                </ContextMenu.Root>
               </article>;
             })}
             <div ref={bottomRef} />
@@ -315,7 +343,7 @@ export default function HomePage() {
           <form className="composer-form" onSubmit={send}>
             <Popover.Root><Popover.Trigger asChild><Button type="button" variant="ghost" size="icon" className="icon-button emoji-button" aria-label={t.emoji}><Smile /></Button></Popover.Trigger><Popover.Portal><Popover.Content className="emoji-menu" sideOffset={12} aria-label={t.emoji}>{["🙂", "❤️", "👍", "😂", "🙏", "🔥", "🤍", "😊", "👋", "🎉", "👌", "🇰🇿"].map(emoji => <Popover.Close key={emoji} asChild><button onClick={() => { updateDraft({ text: draft.text + emoji }); composeRef.current?.focus(); }} aria-label={emoji}>{emoji}</button></Popover.Close>)}</Popover.Content></Popover.Portal></Popover.Root>
             <Button type="button" variant="ghost" size="icon" className="icon-button attach-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label={t.attachment} title={t.attachment}><Paperclip /></Button>
-            <Button type="button" variant="ghost" size="icon" className="icon-button camera-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label={locale === "ru" ? "Фото" : "Фото"} title={locale === "ru" ? "Фото" : "Фото"}><Camera /></Button>
+            <Button type="button" variant="ghost" size="icon" className="icon-button camera-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label="Фото" title="Фото"><Camera /></Button>
             <input type="file" ref={fileRef} hidden onChange={e => { attach(e.target.files?.[0]); e.target.value = ""; }} />
             <Textarea ref={composeRef} value={draft.text} rows={1} maxLength={MAX_MESSAGE_LENGTH} className="message-input" placeholder={t.message} aria-label={t.message} onChange={e => updateDraft({ text: e.target.value })} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
             {draft.text.trim() || draft.attachment || draft.editing ? <Button type="submit" size="icon" className="send-button" disabled={draft.editing ? !draft.text.trim() : !draft.text.trim() && !draft.attachment} aria-label={draft.editing ? t.save : t.send}>{draft.editing ? <Check /> : <Send />}</Button> : <Button type="button" variant="ghost" size="icon" className="icon-button mic-button" onClick={() => setModal("voice")} aria-label={t.voice} title={t.voice}><Mic /></Button>}

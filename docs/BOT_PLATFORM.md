@@ -1,79 +1,63 @@
 # JELI Bot Platform
 
-JELI keeps the simple, familiar messenger UX, while exposing Telegram-level platform power behind optional surfaces.
+JELI keeps bot creation and bot management inside the messenger. The primary user experience is the system chat **BotJeli**, following the successful BotFather pattern: commands, conversational steps and inline controls inside a normal chat.
 
-## Product principle
+## Product rule
 
-Do not overload Chats. A person who only wants messaging should never need to understand bots, APIs or Mini Apps.
+Do not create a separate user-facing admin dashboard for routine bot creation.
 
-Platform features live in:
-- system manager bot `@JELIBot`;
-- Bot Studio (`/bots`);
-- Apps / discovery surface later;
-- per-chat bot and Mini App actions only when relevant.
+The normal path is:
+1. open **BotJeli** from Chats;
+2. send `/newbot`;
+3. answer BotJeli's questions;
+4. receive the bot token in the conversation;
+5. manage owned bots through `/mybots` and contextual inline controls.
 
-## 1. `@JELIBot` — BotFather-class manager
+Advanced developer settings may later open as a Mini App from BotJeli, but they remain secondary to the chat flow.
 
-The system manager bot should support both commands and buttons.
+## BotJeli commands
 
-Initial commands:
-- `/newbot` — create bot;
+Initial command set:
+- `/newbot` — create a bot;
 - `/mybots` — list owned bots;
-- `/token` — issue/rotate/revoke bot token;
+- `/token` — issue / rotate / revoke token;
 - `/setname` — display name;
 - `/setusername` — public username;
 - `/setdescription` — profile description;
 - `/setcommands` — slash commands;
 - `/setwebhook` — webhook URL;
-- `/setminiapp` — main Mini App URL;
-- `/permissions` — bot scopes;
+- `/setminiapp` — main Mini App;
+- `/permissions` — scopes;
 - `/analytics` — usage summary;
-- `/deletebot` — destructive flow with confirmation.
+- `/deletebot` — destructive flow with confirmation;
+- `/help` — help.
 
-Better than a command-only BotFather:
-1. `/newbot` can open Bot Studio as a Mini App.
-2. Creation is a guided wizard with live username validation.
-3. The user sees permissions before enabling them.
-4. Bot tokens are shown once, can be rotated and have audit history.
-5. Test/sandbox mode is available before production activation.
+Current prototype implements the first local slice: `/newbot`, guided name + username creation, local `jeli_demo_...` test token, `/mybots` and `/help`.
 
-## 2. Bot Studio
+## Bot creation UX
 
-Current foundation route: `/bots`.
+`/newbot` should behave conversationally:
+- BotJeli asks for the bot name;
+- then asks for a unique username;
+- invalid input is rejected without losing previous answers;
+- after success, BotJeli returns the token and next management actions;
+- tokens are never exposed outside the chat flow unless the user explicitly requests them.
 
-The first UI foundation includes:
-- bot name and username;
-- bot type: AI / support / shop / automation / custom;
-- local test token;
-- commands;
-- webhook URL;
-- Main Mini App URL;
-- permission scopes.
+Production token rules:
+- cryptographically random with at least 256 bits of entropy;
+- raw token shown only at creation/rotation;
+- server stores a verifier/hash where practical;
+- immediate rotate/revoke;
+- scoped permissions;
+- per-token rate limits;
+- audit record for creation, rotation and revocation.
 
-The current token is deliberately local-only and does not authenticate against a network service.
+## Bot API v1
 
-Production Bot Studio should add:
-- avatar and profile media;
-- username availability check;
-- token one-time reveal;
-- token rotation/revocation;
-- webhook health and last delivery;
-- event log;
-- test update sender;
-- command editor;
-- inline keyboards / menus;
-- Mini App settings;
-- business integration;
-- analytics;
-- billing / monetization;
-- collaborators and roles;
-- audit log.
-
-## 3. Bot API v1
-
-Recommended public API shape:
+Recommended API:
 
 ```text
+GET  /bot/v1/me
 POST /bot/v1/messages.send
 POST /bot/v1/messages.edit
 POST /bot/v1/messages.delete
@@ -83,7 +67,6 @@ POST /bot/v1/chats.members
 POST /bot/v1/commands.set
 POST /bot/v1/webhooks.set
 POST /bot/v1/webhooks.delete
-GET  /bot/v1/me
 ```
 
 Authentication:
@@ -92,19 +75,7 @@ Authentication:
 Authorization: Bot <token>
 ```
 
-Production token rules:
-- cryptographically random, at least 256 bits of entropy;
-- raw token displayed only at creation/rotation;
-- only a verifier/hash stored server-side where practical;
-- token prefix identifies environment and key version, not secret material;
-- immediate revoke and rotate;
-- scoped permissions;
-- per-token rate limits;
-- audit record for create/rotate/revoke.
-
-## 4. Webhooks and events
-
-Events should be versioned and idempotent.
+## Webhooks
 
 Core events:
 - `message.created`;
@@ -119,18 +90,17 @@ Core events:
 - `payment.succeeded`;
 - `payment.refunded`.
 
-Webhook requirements:
-- HTTPS only in production;
+Production requirements:
+- HTTPS only;
 - signed requests;
 - event id + timestamp;
 - replay protection;
+- idempotency;
 - exponential retries;
 - dead-letter queue;
-- delivery logs in Bot Studio.
+- delivery history accessible from BotJeli / advanced Mini App.
 
-## 5. Permission model
-
-Scopes should be explicit, not all-or-nothing.
+## Permissions
 
 Suggested scopes:
 - `messages:read`;
@@ -146,147 +116,101 @@ Suggested scopes:
 - `business:messages`;
 - `channels:publish`.
 
-Users/admins must be able to see what a bot can access and revoke it per chat.
+Users and group admins must always be able to inspect and revoke bot access.
 
-## 6. Mini Apps
+## Inline management inside BotJeli
 
-Mini Apps are the biggest platform multiplier. A Mini App can be a complete service inside JELI while Chats remains simple.
+After `/mybots`, BotJeli should return owned bots with inline buttons such as:
+- Edit bot;
+- Token;
+- Commands;
+- Webhook;
+- Mini App;
+- Permissions;
+- Analytics;
+- Delete bot.
+
+This keeps the experience inside the chat. Complex forms can open a JELI Mini App only when needed.
+
+## Mini Apps
+
+Mini Apps are an optional extension of BotJeli, not a replacement for the chat UX.
 
 Required capabilities:
 - seamless JELI sign-in;
+- signed init data;
 - theme and safe-area API;
 - full-screen and compact modes;
 - back/main buttons;
 - chat context;
-- secure init data signed by JELI;
-- device storage abstraction;
+- storage abstraction;
 - file picker;
-- location with explicit user permission;
-- push/deep-link hooks;
-- payments;
-- home-screen shortcut later.
+- location with explicit permission;
+- deep links and push hooks;
+- payments.
 
-Target examples:
-- government services;
-- bank/payment service;
-- delivery and taxi;
-- CRM;
-- booking;
-- marketplace;
-- games;
-- AI assistants;
-- corporate HR / approvals;
-- legal/document services.
+## AI bots
 
-## 7. AI bots
-
-First-class AI mode should not be a special closed system. Bot owners can connect their own model/provider.
-
-Features:
-- system prompt / instructions;
-- model/provider adapter;
-- knowledge files;
-- retrieval;
+First-class AI bot capabilities:
+- configurable provider/model;
+- system instructions;
+- knowledge files and retrieval;
 - tool/function calls;
-- conversation memory controls;
+- memory controls;
 - human handoff;
-- moderation / policy layer;
+- moderation;
 - per-user budgets;
-- usage analytics;
 - streaming responses;
 - voice input/output later.
 
-Provider API keys belong to the bot owner and must be stored server-side encrypted; never shipped to clients.
+Provider credentials remain server-side and encrypted.
 
-## 8. No-code automation
+## No-code automation
 
-This can make JELI stronger than a pure BotFather clone.
+BotJeli may launch a Flow Builder Mini App for advanced automation.
 
-Visual Flow Builder blocks:
-- trigger: new message / command / join / payment / schedule;
-- condition;
+Useful blocks:
+- new message / command / join / payment / schedule triggers;
+- conditions;
 - send message;
-- buttons;
-- collect form data;
+- buttons/forms;
 - HTTP request;
-- call AI;
-- write to table/CRM;
+- AI call;
+- CRM/table write;
 - payment;
 - delay;
 - human handoff.
 
-A small business should be able to build a useful bot without writing code.
-
-## 9. Payments and monetization
+## Payments and business mode
 
 Platform primitives:
-- one-time invoice;
-- subscription;
-- paid digital content;
-- physical-goods checkout;
+- one-time invoices;
+- subscriptions;
 - creator tips;
-- affiliate/referral program;
 - refunds;
-- bot revenue dashboard.
-
-Payment implementation must follow iOS/Google Play rules for digital goods in the distributed mobile apps. JELI should keep the payment abstraction provider-neutral so Kazakhstan payment rails can be integrated where platform rules allow it.
-
-## 10. Business mode
-
-High-value feature set:
-- connect a bot to a business inbox;
+- affiliate/referral;
+- business inbox;
 - opening hours and auto-replies;
 - lead qualification;
 - CRM tags;
-- assignment to employee;
+- employee assignment;
 - AI draft replies;
-- order/status lookup;
-- template messages;
-- analytics;
-- human takeover at any time.
+- human takeover.
 
-## 11. Top platform features to add around bots
+## Build order
 
-Priority A — high impact:
-1. Mini Apps + App Directory.
-2. AI agents and support bots.
-3. Channels + large communities.
-4. Topics/forums inside large groups.
-5. Business inbox + CRM automations.
-6. Scheduled messages, silent messages and reminders.
-7. Public usernames, QR/deep links and invite links.
-8. Global search across people, groups, channels, bots and apps.
-9. Reactions, polls, quizzes and forms.
-10. Multi-device sync.
-
-Priority B — platform differentiation:
-11. No-code bot Flow Builder.
-12. Bot/App marketplace with verification and reviews.
-13. Payments, subscriptions and affiliate programs.
-14. AI translation and transcript/summary for voice/video.
-15. Large cloud files and personal cloud storage.
-16. Screen sharing / voice rooms / live streams.
-17. Custom emoji/stickers and creator tools.
-18. Collaborative Mini Apps inside group chats.
-19. Organization workspaces with roles and SSO.
-20. Open developer SDKs for Web, Android, iOS and server languages.
-
-## 12. Recommended build order
-
-Do not build 20 disconnected demos. Ship one vertical slice at a time.
-
-### Platform slice 1 — real bot
+### Slice 1 — real BotJeli
 1. real user account;
-2. create bot through `@JELIBot` or Bot Studio;
+2. `/newbot` inside BotJeli;
 3. server issues production token;
-4. `getMe` equivalent;
-5. bot receives a user message;
-6. bot sends a reply;
-7. webhook delivery + retries;
-8. token rotation;
-9. permission and audit logs.
+4. `getMe`;
+5. webhook receives user message;
+6. bot sends reply;
+7. retry/idempotency;
+8. rotate/revoke;
+9. audit log.
 
-### Platform slice 2 — interactive bot
+### Slice 2 — interactive bots
 - commands;
 - inline/reply buttons;
 - callbacks;
@@ -294,15 +218,15 @@ Do not build 20 disconnected demos. Ship one vertical slice at a time.
 - groups;
 - rate limits.
 
-### Platform slice 3 — Mini App
+### Slice 3 — Mini Apps
 - signed init data;
-- launch button;
+- launch from BotJeli/bot chat;
 - full-screen UI;
 - chat context;
 - storage;
 - payments sandbox.
 
-### Platform slice 4 — AI + business
+### Slice 4 — AI + business
 - AI provider adapter;
 - knowledge/RAG;
 - business inbox;
@@ -311,4 +235,4 @@ Do not build 20 disconnected demos. Ship one vertical slice at a time.
 
 ## Success metric
 
-A developer should be able to go from "I have a JELI account" to a working echo bot in under 5 minutes, while a non-developer should be able to build a basic support bot without code.
+A user should be able to open BotJeli and create a working bot without leaving the messenger. A developer should reach a functioning echo bot in under five minutes once the production Bot API exists.

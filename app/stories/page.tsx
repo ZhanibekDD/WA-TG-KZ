@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
 import { Archive, ArrowLeft, ChevronLeft, ChevronRight, EyeOff, Heart, LockKeyhole, MoreHorizontal, Pin, Plus, Reply, Send, ShieldCheck, Sparkles, X } from "lucide-react";
@@ -38,12 +39,13 @@ export default function StoriesPage() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    const stories = readLocalStories();
-    setLocalStories(stories);
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("compose") === "1") setCompose(true);
-    const requested = params.get("story");
-    if (requested) setSelectedId(requested);
+    const timer = window.setTimeout(() => {
+      setLocalStories(readLocalStories());
+      const params = new URLSearchParams(window.location.search);
+      setCompose(params.get("compose") === "1");
+      setSelectedId(params.get("story"));
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {

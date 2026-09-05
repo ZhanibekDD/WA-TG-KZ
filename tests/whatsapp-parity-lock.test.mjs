@@ -42,6 +42,17 @@ test("New chat keeps the WhatsApp select-contact hierarchy on mobile", () => {
   assert.match(lock, /\.whatsapp-contact-picker/);
 });
 
+test("secondary tabs keep WhatsApp-style status and honest empty-state geometry", () => {
+  assert.match(page, /updates-list/);
+  assert.match(page, /communities-empty/);
+  assert.match(page, /calls-empty/);
+  assert.match(lock, /\.updates-list > \.status-row/);
+  assert.match(lock, /display: inline-flex/);
+  assert.match(lock, /\.updates-list \.channel-discover/);
+  assert.match(lock, /\.communities-empty,\s*\n\.calls-empty/);
+  assert.match(lock, /\.communities-empty \.primary-button,\s*\n\.calls-empty \.primary-button/);
+});
+
 test("parity lock prevents known visual regressions", () => {
   assert.match(lock, /\.title-row\.normal-title\s*\{\s*display: none;/s);
   assert.match(lock, /\.setting-section \+ \.setting-section\s*\{\s*display: none;/s);

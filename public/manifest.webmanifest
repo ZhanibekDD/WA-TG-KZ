@@ -7,21 +7,21 @@
   "background_color": "#f1f8f7",
   "theme_color": "#18b5ad",
   "lang": "ru",
-  "icons": [{ "src": "/jeli-icon.png", "sizes": "256x256", "type": "image/png", "purpose": "any maskable" }],
+  "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }],
   "shortcuts": [
     {
       "name": "Bot Studio",
       "short_name": "Bots",
       "description": "Создание и управление JELI-ботами",
       "url": "/bots",
-      "icons": [{ "src": "/jeli-icon.png", "sizes": "256x256", "type": "image/png" }]
+      "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
       "name": "Stories",
       "short_name": "Stories",
       "description": "Истории JELI",
       "url": "/stories",
-      "icons": [{ "src": "/jeli-icon.png", "sizes": "256x256", "type": "image/png" }]
+      "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ]
 }

@@ -30,11 +30,13 @@ function ContextItem({ children, action, danger = false }: { children: ReactNode
   return <ContextMenu.Item className={cn("menu-item", danger && "danger")} onSelect={action}>{children}</ContextMenu.Item>;
 }
 
-function ChatMenu({ chat, t, act }: { chat: Thread; t: MessengerCopy; act: (type: "pin" | "mute" | "archive") => void }) {
+function ChatMenu({ chat, t, act }: { chat: Thread; t: MessengerCopy; act: (type: "pin" | "favorite" | "mute" | "archive") => void }) {
+  const isRu = t.chats === "Чаты";
   return <DropdownMenu.Root>
     <DropdownMenu.Trigger asChild><Button variant="ghost" size="icon" className="icon-button" aria-label={t.more}><MoreVertical /></Button></DropdownMenu.Trigger>
     <DropdownMenu.Portal><DropdownMenu.Content className="context-menu" align="end" sideOffset={6}>
       <MenuItem action={() => act("pin")}><Pin />{chat.pinned ? t.unpin : t.pin}</MenuItem>
+      {chat.kind !== "channel" && chat.kind !== "saved" && <MenuItem action={() => act("favorite")}><Bookmark />{chat.favorite ? (isRu ? "Убрать из избранного" : "Таңдаулыдан алып тастау") : (isRu ? "Добавить в избранное" : "Таңдаулыға қосу")}</MenuItem>}
       <MenuItem action={() => act("mute")}><BellOff />{chat.muted ? t.unmute : t.mute}</MenuItem>
       <MenuItem action={() => act("archive")}><Archive />{chat.archived ? t.unarchive : t.archive}</MenuItem>
     </DropdownMenu.Content></DropdownMenu.Portal>
@@ -90,6 +92,7 @@ export default function HomePage() {
     { id: "communities" as const, label: communitiesLabel, icon: UsersRound },
     { id: "calls" as const, label: t.calls, icon: Phone },
   ];
+  const filterLabel = (item: Filter) => item === "favorites" ? t.saved : t[item];
 
   useEffect(() => { document.documentElement.lang = locale; }, [locale]);
   useEffect(() => {
@@ -165,7 +168,7 @@ export default function HomePage() {
     event.preventDefault();
     if (!groupName.trim() || !selectedContacts.length) { setNotice(t.missingMembers); return; }
     const id = uid();
-    dispatch({ type: "create", thread: { id, name: groupName.trim(), initials: "", color: "#638eae", kind: "group", members: [...selectedContacts], unread: 0, pinned: false, muted: false, archived: false, order: Math.max(...state.threads.map(chat => chat.order), 0) + 1 } });
+    dispatch({ type: "create", thread: { id, name: groupName.trim(), initials: "", color: "#638eae", kind: "group", members: [...selectedContacts], unread: 0, pinned: false, favorite: false, muted: false, archived: false, order: Math.max(...state.threads.map(chat => chat.order), 0) + 1 } });
     setView("chats"); setArchived(false); setFilter("all"); setQuery(""); setModal(null); openChat(id);
   }
   function releaseAttachment(attachment?: Attachment) {
@@ -241,7 +244,7 @@ export default function HomePage() {
                 <DropdownMenu.Portal><DropdownMenu.Content className="context-menu app-menu" align="end" sideOffset={4}>
                   <MenuItem action={newGroup}>{locale === "ru" ? "Новая группа" : "Жаңа топ"}</MenuItem>
                   <MenuItem action={() => setNotice(linkedDevicesNotice)}>{locale === "ru" ? "Связанные устройства" : "Байланыстырылған құрылғылар"}</MenuItem>
-                  <MenuItem action={() => setNotice(starredNotice)}>{locale === "ru" ? "Избранные" : "Таңдаулы"}</MenuItem>
+                  <MenuItem action={() => setNotice(starredNotice)}>{locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар"}</MenuItem>
                   <MenuItem action={() => switchView("settings")}>{t.settings}</MenuItem>
                 </DropdownMenu.Content></DropdownMenu.Portal>
               </DropdownMenu.Root>
@@ -259,7 +262,7 @@ export default function HomePage() {
 
       {view === "chats" && <>
         <div className="search-box chat-list-search"><Search /><Input ref={listSearchRef} value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search} />{query && <button onClick={() => { setQuery(""); listSearchRef.current?.focus(); }} aria-label={t.close}><X /></button>}</div>
-        <div className="chat-filters" role="group" aria-label={t.chats}>{(["all", "unread", "groups"] as Filter[]).map(item => <button key={item} aria-pressed={filter === item} className={cn("filter-chip", filter === item && "active")} onClick={() => setFilter(item)}>{t[item]}</button>)}</div>
+        <div className="chat-filters" role="group" aria-label={t.chats}>{(["all", "unread", "favorites", "groups"] as Filter[]).map(item => <button key={item} aria-pressed={filter === item} className={cn("filter-chip", filter === item && "active")} onClick={() => setFilter(item)}>{filterLabel(item)}</button>)}</div>
         <div className="inbox-scroll">
           {!archived && <button className="archive-row" onClick={() => { setArchived(true); setFilter("all"); setQuery(""); }}><Archive /><span>{t.archive}</span><span>{archiveCount}</span></button>}
           {filtered.length ? <ul className="conversation-list">{filtered.map(threadRow)}</ul> : <div className="small-empty"><Search /><strong>{t.noChats}</strong><p>{t.noChatsHint}</p></div>}

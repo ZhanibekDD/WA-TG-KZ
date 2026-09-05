@@ -24,18 +24,50 @@
   display: none;
 }
 
+/* WhatsApp's overflow menu is a compact text menu anchored to the three-dot
+   action rather than a direct jump to Settings. */
+.app-menu {
+  min-width: 224px;
+  padding: 7px 0;
+  border-radius: 8px;
+}
+
+.app-menu .menu-item {
+  min-height: 43px;
+  padding: 10px 20px;
+  color: var(--wa-text);
+  font-size: 14px;
+}
+
+/* Android 2026 is rolling out a floating context menu next to the selected
+   message. Radix ContextMenu gives us right-click on desktop and long-press
+   semantics on touch while keeping message actions adjacent to the bubble. */
+.message-bubble {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.message-context-menu {
+  min-width: 205px;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px #0b141a30;
+}
+
+.message-context-menu .menu-item {
+  min-height: 42px;
+  padding: 9px 12px;
+}
+
 @media (max-width: 899px) {
-  /* The current Android Chats tab keeps the rounded search field visible.
-     Earlier parity code collapsed it behind the search icon, which made the
-     first screen visibly different from the reference. */
+  /* The current Android Chats tab keeps the rounded search field visible. */
   .chat-list-search.mobile-search-collapsed {
     display: flex;
   }
 
-  /* Once the search field is persistent, the extra search action in the top
-     Chats app bar becomes a duplicate. Scope the removal to the Chats header
-     only; other tabs keep their own action layout. */
-  .inbox-header:has(.chats-main-title) .whatsapp-list-actions > .icon-button:nth-child(2) {
+  /* The rounded search field is already permanently visible, so the search
+     icon in the Chats app bar is redundant on mobile. */
+  .inbox-header:has(.chats-main-title) .top-search-action {
     display: none;
   }
 
@@ -45,5 +77,15 @@
 
   .chat-list-search {
     margin-top: 0;
+  }
+
+  .app-menu {
+    min-width: 236px;
+  }
+
+  .message-context-menu {
+    min-width: 218px;
+    border-radius: 14px;
+    box-shadow: 0 10px 34px #0b141a38;
   }
 }

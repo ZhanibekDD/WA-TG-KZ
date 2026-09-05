@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ContextMenu, Dialog, DropdownMenu, Popover } from "radix-ui";
-import { Archive, ArrowLeft, BellOff, Bookmark, Camera, Check, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Shield, Smile, Trash2, UsersRound, Video, X } from "lucide-react";
+import { Archive, ArrowLeft, BellOff, Bookmark, Camera, Check, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Shield, Smile, Star, Trash2, UsersRound, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,6 +83,7 @@ export default function HomePage() {
   const visibleMessages = messages.filter(message => localize(message.body, locale).toLocaleLowerCase().includes(messageQuery.toLocaleLowerCase()));
   const searchContacts = contacts.filter(contact => contact.name.toLocaleLowerCase().includes(contactQuery.toLocaleLowerCase()));
   const replyMessage = messages.find(message => message.id === draft.replyTo);
+  const selfThread = state.threads.find(chat => chat.id === "saved")!;
   const communitiesLabel = locale === "ru" ? "Сообщества" : "Қауымдастықтар";
   const viewLabels: Record<View, string> = { chats: t.chats, updates: t.updates, communities: communitiesLabel, calls: t.calls, settings: t.settings };
   const viewLabel = viewLabels[view];
@@ -186,17 +187,16 @@ export default function HomePage() {
     const kind = ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type) ? "image" : file.type.startsWith("audio/") ? "audio" : "file";
     updateDraft({ attachment: { url, name: file.name, size: file.size, kind } });
   }
-  function toSaved(message: Message) {
-    if (message.attachment) return;
-    dispatch({ type: "send", chatId: "saved", message: { id: uid(), body: localize(message.body, locale), at: new Date().toISOString(), mine: true } });
-    setNotice(t.savedToast);
+  function toggleStar(message: Message) {
+    dispatch({ type: "star", chatId: activeId, messageId: message.id });
+    setNotice(message.starred ? (locale === "ru" ? "Удалено из избранных сообщений" : "Таңдаулы хабарламалардан алынды") : (locale === "ru" ? "Добавлено в избранные сообщения" : "Таңдаулы хабарламаларға қосылды"));
   }
   async function copyMessage(message: Message) {
     try { await navigator.clipboard.writeText(localize(message.body, locale)); setNotice(t.copied); }
     catch { setNotice(t.copyError); }
   }
 
-  const infoText = active.kind === "channel" ? t.channelInfo : active.kind === "saved" ? t.savedInfo : active.kind === "group" ? t.groupInfo + " · " + ((active.members?.length ?? 0) + 1) + " " + t.memberUnit : t.directInfo;
+  const infoText = active.kind === "channel" ? t.channelInfo : active.kind === "saved" ? (locale === "ru" ? "Сообщение самому себе" : "Өзіңізге хабарлама") : active.kind === "group" ? t.groupInfo + " · " + ((active.members?.length ?? 0) + 1) + " " + t.memberUnit : t.directInfo;
   const textFor = (message?: Message) => message ? localize(message.body, locale) || (message.attachment?.kind === "image" ? t.photo : message.attachment?.kind === "audio" ? t.audio : t.file) : "";
 
   function threadRow(chat: Thread) {
@@ -220,7 +220,7 @@ export default function HomePage() {
   }
 
   const linkedDevicesNotice = locale === "ru" ? "Связанные устройства появятся после подключения реальных аккаунтов и сессий." : "Байланыстырылған құрылғылар нақты аккаунттар мен сессиялар қосылғаннан кейін пайда болады.";
-  const starredNotice = locale === "ru" ? "Отдельный список избранных сообщений будет подключён вместе с постоянным хранением." : "Таңдаулы хабарламалардың жеке тізімі тұрақты сақтау қосылғанда іске қосылады.";
+  const starredNotice = locale === "ru" ? "Список избранных сообщений появится здесь после подключения постоянного хранения." : "Таңдаулы хабарламалар тізімі тұрақты сақтау қосылғаннан кейін осында пайда болады.";
   const newContactNotice = locale === "ru" ? "Создание настоящего контакта подключим вместе с адресной книгой устройства." : "Нақты контакт жасау құрылғының мекенжай кітабы қосылғанда іске қосылады.";
 
   return <main className={cn("messenger-shell", opened && "conversation-open-mobile")} data-accent="green">
@@ -290,7 +290,7 @@ export default function HomePage() {
         <div className="settings-profile"><span className="avatar profile"><CircleUserRound /></span><div><strong>{t.me}</strong><small>{t.profileHint}</small></div></div>
         <section className="setting-section"><h2><Languages />{t.language}</h2><div className="segmented" role="group" aria-label={t.language}><button className={locale === "ru" ? "active" : ""} onClick={() => setLocale("ru")} aria-pressed={locale === "ru"}>Русский</button><button className={locale === "kk" ? "active" : ""} onClick={() => setLocale("kk")} aria-pressed={locale === "kk"}>Қазақша</button></div></section>
         <button className="settings-row" onClick={() => setModal("about")}><Shield /><span>{t.privacy}</span><ChevronRight /></button>
-        <button className="settings-row" onClick={() => { switchView("chats"); openChat("saved"); }}><Bookmark /><span>{t.saved}</span><ChevronRight /></button>
+        <button className="settings-row" onClick={() => setNotice(starredNotice)}><Star /><span>{locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар"}</span><ChevronRight /></button>
         <button className="settings-row" onClick={() => setModal("about")}><Info /><span>{t.help}</span><ChevronRight /></button>
       </div>}
       <button className="demo-footer" onClick={() => setModal("about")}><Info /><span>{t.demoShort}</span></button>
@@ -324,13 +324,13 @@ export default function HomePage() {
                       {message.replyTo && <div className="reply-quote"><strong>{quoted ? quoted.mine ? t.you : quoted.sender || localize(active.name, locale) : t.reply}</strong><span>{quoted ? textFor(quoted) : t.quoteDeleted}</span></div>}
                       {message.attachment && <AttachmentView file={message.attachment} t={t} />}
                       {localize(message.body, locale) && <p className="message-body">{localize(message.body, locale)}</p>}
-                      <div className="message-meta">{message.edited && <span>{t.edited}</span>}<time dateTime={message.at}>{clock(message.at)}</time>{message.mine && <span title={t.noDelivery} aria-label={t.noDelivery}><Clock3 /></span>}</div>
+                      <div className="message-meta">{message.edited && <span>{t.edited}</span>}{message.starred && <Star className="message-star" aria-label={locale === "ru" ? "Избранное сообщение" : "Таңдаулы хабарлама"} />}<time dateTime={message.at}>{clock(message.at)}</time>{message.mine && <span title={t.noDelivery} aria-label={t.noDelivery}><Clock3 /></span>}</div>
                     </div>
                   </ContextMenu.Trigger>
                   <ContextMenu.Portal><ContextMenu.Content className="context-menu message-context-menu" onCloseAutoFocus={e => { if (focusComposerAfterMenu.current) { e.preventDefault(); focusComposerAfterMenu.current = false; composeRef.current?.focus(); } }}>
                     {active.kind !== "channel" && <ContextItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ replyTo: message.id, editing: undefined }); }}><Reply />{t.reply}</ContextItem>}
                     <ContextItem action={() => void copyMessage(message)}><Copy />{t.copy}</ContextItem>
-                    {!message.attachment && <ContextItem action={() => toSaved(message)}><Bookmark />{t.saveTo}</ContextItem>}
+                    <ContextItem action={() => toggleStar(message)}><Star />{message.starred ? (locale === "ru" ? "Убрать из избранного" : "Таңдаулыдан алып тастау") : (locale === "ru" ? "В избранное" : "Таңдаулыға")}</ContextItem>
                     {message.mine && <ContextItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ editing: message.id, text: localize(message.body, locale), replyTo: undefined }); }}><Pencil />{t.edit}</ContextItem>}
                     {message.mine && <ContextItem danger action={() => setDeleteTarget({ chatId: activeId, messageId: message.id })}><Trash2 />{t.delete}</ContextItem>}
                   </ContextMenu.Content></ContextMenu.Portal>
@@ -376,7 +376,7 @@ export default function HomePage() {
             </div>
             <label className="field-label new-chat-search">{locale === "ru" ? "Контакты в Qazyna" : "Qazyna-дағы контактілер"}<Input value={contactQuery} onChange={e => setContactQuery(e.target.value)} placeholder={t.search} /></label>
             <div className="contact-picker whatsapp-contact-picker">
-              {!contactQuery && <button type="button" onClick={() => startDirect("saved")}><Avatar chat={{ initials: "", kind: "saved", color: "#5b9ecd" }} /><strong>{t.saved}</strong></button>}
+              {!contactQuery && <button type="button" onClick={() => startDirect("saved")}><Avatar chat={selfThread} /><strong>{localize(selfThread.name, locale)}</strong></button>}
               {searchContacts.map(person => <button type="button" key={person.id} onClick={() => startDirect(person.id)}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong></button>)}
               {!searchContacts.length && <p>{t.noMatches}</p>}
             </div>

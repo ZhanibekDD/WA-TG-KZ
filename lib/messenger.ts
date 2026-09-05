@@ -3,13 +3,13 @@ export type Text = string | Record<Locale, string>;
 export type Kind = "direct" | "group" | "channel" | "saved";
 export type Filter = "all" | "unread" | "favorites" | "groups" | "channels";
 export type Attachment = { name: string; url: string; size: number; kind: "file" | "image" | "audio" };
-export type Message = { id: string; body: Text; mine: boolean; at: string; sender?: string; replyTo?: string; edited?: boolean; attachment?: Attachment };
+export type Message = { id: string; body: Text; mine: boolean; at: string; sender?: string; replyTo?: string; edited?: boolean; starred?: boolean; attachment?: Attachment };
 export type Thread = { id: string; name: Text; initials: string; color: string; kind: Kind; unread: number; pinned: boolean; favorite: boolean; muted: boolean; archived: boolean; following?: boolean; members?: string[]; order: number };
 export type MessengerState = { threads: Thread[]; messages: Record<string, Message[]> };
 export type Action =
   | { type: "send"; chatId: string; message: Message }
   | { type: "edit"; chatId: string; messageId: string; body: string }
-  | { type: "remove"; chatId: string; messageId: string }
+  | { type: "remove" | "star"; chatId: string; messageId: string }
   | { type: "read" | "pin" | "favorite" | "mute" | "archive" | "follow"; chatId: string }
   | { type: "create"; thread: Thread };
 
@@ -33,7 +33,7 @@ const thread = (id: string, name: Text, initials: string, color: string, kind: K
 export function createDemoState(): MessengerState {
   return {
     threads: [
-      thread("saved", pair("Избранное", "Таңдаулы"), "", "#5b9ecd", "saved", 1, { pinned: true }),
+      thread("saved", pair("Вы", "Сіз"), "", "#5b9ecd", "saved", 1, { pinned: true }),
       thread("aigerim", "Айгерим", "А", "#be6978", "direct", 9, { pinned: true, favorite: true, unread: 2 }),
       thread("family", pair("Семья", "Отбасы"), "", "#71a48c", "group", 8, { favorite: true, unread: 3, members: ["aigerim", "daniyar", "asqar"] }),
       thread("daniyar", "Данияр", "Д", "#658db5", "direct", 7),
@@ -45,10 +45,10 @@ export function createDemoState(): MessengerState {
       thread("qazaqtech", "Qazaq Tech", "QT", "#608eb6", "channel", 2, { following: false }),
     ],
     messages: {
-      saved: [{ id: "s1", mine: true, body: pair("Здесь можно оставлять заметки и сохранять важные сообщения.", "Мұнда жазбалар мен маңызды хабарламаларды сақтауға болады."), at: at("09:00") }],
+      saved: [{ id: "s1", mine: true, body: pair("Это чат с самим собой. Здесь можно отправлять себе заметки и файлы.", "Бұл өзіңізбен чат. Мұнда өзіңізге жазбалар мен файлдар жібере аласыз."), at: at("09:00") }],
       aigerim: [
         { id: "a1", mine: false, body: pair("Привет! Как дела?", "Сәлем! Қалайсың?"), at: at("10:31") },
-        { id: "a2", mine: true, body: pair("Привет 🙂 Всё хорошо. Как твой день?", "Сәлем 🙂 Бәрі жақсы. Күнің қалай өтіп жатыр?"), at: at("10:33") },
+        { id: "a2", mine: true, body: pair("Привет 🙂 Всё хорошо. Как твой день?", "Сәлем 🙂 Бәрі жақсы. Күнің қалай өтіп жатыр?"), at: at("10:33"), starred: true },
         { id: "a3", mine: false, body: pair("Отлично! Вечером увидимся?", "Керемет! Кешке кездесеміз бе?"), at: at("10:35") },
         { id: "a4", mine: true, body: pair("Да, давай в 19:00. Напиши, когда будешь рядом.", "Иә, сағат 19:00-де. Жақындағанда жаз."), at: at("10:37") },
         { id: "a5", mine: false, body: pair("Хорошо, договорились 🤍", "Жақсы, келістік 🤍"), at: at("10:42") },
@@ -59,7 +59,7 @@ export function createDemoState(): MessengerState {
       asqar: [{ id: "as1", mine: false, body: pair("Сәлем! Ты сейчас занят?", "Сәлем! Қазір боссың ба?"), at: at("09:15") }],
       madi: [{ id: "m1", mine: true, body: pair("Хорошо 👍", "Жақсы 👍"), at: at("08:56") }],
       weekend: [{ id: "w1", mine: false, sender: "Данияр", body: pair("Кто идёт в горы?", "Тауға кім барады?"), at: at("08:00") }],
-      qazyna: [{ id: "q1", mine: false, body: pair("Добро пожаловать в демо Qazyna!\n\nЧаты, группы, каналы и избранное — всё в привычном месте. Это пример публикации в канале, а не сообщение действующего сервиса.", "Qazyna демосына қош келдіңіз!\n\nЧаттар, топтар, арналар және таңдаулы — бәрі үйреншікті орында. Бұл жұмыс істеп тұрған сервистің хабарламасы емес, арнадағы жарияланым үлгісі."), at: at("09:00") }],
+      qazyna: [{ id: "q1", mine: false, body: pair("Добро пожаловать в демо Qazyna!\n\nЧаты, группы и каналы находятся в привычных разделах. Это пример публикации в канале, а не сообщение действующего сервиса.", "Qazyna демосына қош келдіңіз!\n\nЧаттар, топтар және арналар үйреншікті бөлімдерде орналасқан. Бұл жұмыс істеп тұрған сервистің хабарламасы емес, арнадағы жарияланым үлгісі."), at: at("09:00") }],
       qazaqtech: [{ id: "qt1", mine: false, body: pair("Пример канала о технологиях. Здесь будут публикации авторов, а не общая лента рекомендаций.", "Технологиялар туралы арна үлгісі. Мұнда жалпы ұсыныстар таспасы емес, авторлардың жазбалары болады."), at: at("08:00") }],
     },
   };
@@ -106,6 +106,9 @@ export function messengerReducer(state: MessengerState, action: Action): Messeng
     const body = action.body.trim();
     if (!body || body.length > MAX_MESSAGE_LENGTH) return state;
     return { ...state, messages: { ...state.messages, [chat.id]: list.map(m => m.id === action.messageId && m.mine ? { ...m, body, edited: true } : m) } };
+  }
+  if (action.type === "star") {
+    return { ...state, messages: { ...state.messages, [chat.id]: list.map(m => m.id === action.messageId ? { ...m, starred: !m.starred } : m) } };
   }
   if (action.type === "remove") {
     return { ...state, messages: { ...state.messages, [chat.id]: list.filter(m => !(m.id === action.messageId && m.mine)) } };

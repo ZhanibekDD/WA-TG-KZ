@@ -1,0 +1,116 @@
+/* Qazyna product identity.
+   This layer intentionally comes AFTER the WhatsApp geometry baseline.
+   We keep the familiar interaction model while making the product visually ours. */
+
+:root {
+  --qz-primary: #5b5bd6;
+  --qz-primary-strong: #4747b8;
+  --qz-primary-bright: #7367f0;
+  --qz-primary-soft: #efefff;
+  --qz-primary-soft-2: #e5e2ff;
+  --qz-chat: #f4f3f8;
+  --qz-panel: #f6f6fa;
+  --qz-border: #e8e7ef;
+  --qz-text: #171721;
+  --qz-secondary: #6f6f7d;
+
+  /* Compatibility bridge for the parity layers. Geometry stays WhatsApp-like;
+     color semantics are now Qazyna-owned. */
+  --wa-green: var(--qz-primary);
+  --wa-green-strong: var(--qz-primary-strong);
+  --wa-green-bright: var(--qz-primary-bright);
+  --wa-chip-active: var(--qz-primary-soft);
+  --wa-chat: var(--qz-chat);
+  --wa-outgoing: var(--qz-primary-soft-2);
+  --wa-panel: var(--qz-panel);
+  --wa-border: var(--qz-border);
+  --wa-text: var(--qz-text);
+  --wa-secondary: var(--qz-secondary);
+
+  --primary: var(--qz-primary);
+  --ring: var(--qz-primary);
+  --accent: var(--qz-primary-soft);
+  --accent-foreground: var(--qz-primary-strong);
+  --chat-paper: var(--qz-chat);
+  --outgoing: var(--qz-primary-soft-2);
+}
+
+body {
+  background: #e9e9ef;
+  color: var(--qz-text);
+}
+
+.brand-row {
+  color: var(--qz-primary-strong);
+}
+
+.wordmark-icon,
+.new-chat-fab,
+.primary-button,
+.send-button,
+.mic-button,
+.status-plus,
+.new-chat-action-icon {
+  background: var(--qz-primary) !important;
+}
+
+.filter-chip.active,
+.mobile-nav .active > span,
+.subscribe-small,
+.communities-empty .empty-icon,
+.calls-empty .empty-icon {
+  background: var(--qz-primary-soft) !important;
+  color: var(--qz-primary-strong) !important;
+}
+
+.unread-badge,
+.mobile-nav b {
+  background: var(--qz-primary-bright) !important;
+}
+
+.archive-row svg,
+.message-sender,
+.reply-quote strong,
+.status-ring.has-status,
+.new-chat-search {
+  color: var(--qz-primary-strong) !important;
+}
+
+.status-ring.has-status {
+  border-color: var(--qz-primary) !important;
+}
+
+.reply-quote {
+  border-left-color: var(--qz-primary) !important;
+}
+
+.chat-panel,
+.chat-wallpaper {
+  background-color: var(--qz-chat) !important;
+}
+
+.chat-wallpaper {
+  background-image:
+    radial-gradient(circle at 10px 10px, #5b5bd60a 1px, transparent 1.4px),
+    radial-gradient(circle at 34px 26px, #7367f00a 1px, transparent 1.4px),
+    linear-gradient(35deg, transparent 48%, #5b5bd607 49%, #5b5bd607 51%, transparent 52%),
+    linear-gradient(-35deg, transparent 48%, #7367f006 49%, #7367f006 51%, transparent 52%);
+  background-size: 46px 46px, 46px 46px, 62px 62px, 62px 62px;
+}
+
+.outgoing .message-bubble {
+  background: var(--qz-primary-soft-2) !important;
+}
+
+.outgoing .message-bubble::before {
+  border-top-color: var(--qz-primary-soft-2) !important;
+}
+
+.message-star {
+  color: var(--qz-primary-strong) !important;
+}
+
+::selection {
+  background: #d8d5ff;
+  color: var(--qz-text);
+}

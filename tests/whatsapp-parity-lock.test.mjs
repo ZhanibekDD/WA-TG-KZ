@@ -29,6 +29,19 @@ test("top overflow and message actions use contextual menus", () => {
   assert.match(lock, /\.message-context-menu/);
 });
 
+test("New chat keeps the WhatsApp select-contact hierarchy on mobile", () => {
+  assert.match(page, /new-chat-modal/);
+  assert.match(page, /new-chat-shortcuts/);
+  assert.match(page, /Новая группа/);
+  assert.match(page, /Новый контакт/);
+  assert.match(page, /Новое сообщество/);
+  assert.match(page, /whatsapp-contact-picker/);
+  assert.match(lock, /\.new-chat-modal/);
+  assert.match(lock, /\.new-chat-shortcuts/);
+  assert.match(lock, /height: 100dvh/);
+  assert.match(lock, /\.whatsapp-contact-picker/);
+});
+
 test("parity lock prevents known visual regressions", () => {
   assert.match(lock, /\.title-row\.normal-title\s*\{\s*display: none;/s);
   assert.match(lock, /\.setting-section \+ \.setting-section\s*\{\s*display: none;/s);

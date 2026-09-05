@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { JeliStoriesDock } from "@/components/jeli-stories-dock";
 import { JeliDeepLinkBridge } from "@/components/jeli-deep-link-bridge";
+import { BotJeliCommandBar } from "@/components/botjeli-command-bar";
 import "./globals.css";
 import "./whatsapp-parity.css";
 import "./whatsapp-lock.css";
@@ -26,5 +27,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#18b5ad", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ru"><body>{children}<JeliStoriesDock /><JeliDeepLinkBridge /></body></html>;
+  return <html lang="ru"><body>{children}<JeliStoriesDock /><JeliDeepLinkBridge /><BotJeliCommandBar /></body></html>;
 }

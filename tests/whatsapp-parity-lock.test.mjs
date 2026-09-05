@@ -31,7 +31,7 @@ test("top overflow and message actions use contextual menus", () => {
   assert.match(lock, /\.message-context-menu/);
 });
 
-test("Favorites are distinct from starred messages and exposed as a chat action", () => {
+test("Favorites are distinct from starred messages and Message Yourself", () => {
   assert.match(page, /type: "pin" \| "favorite" \| "mute" \| "archive"/);
   assert.match(page, /act\("favorite"\)/);
   assert.match(page, /Добавить в избранное/);
@@ -40,6 +40,7 @@ test("Favorites are distinct from starred messages and exposed as a chat action"
   assert.match(page, /type: "star"/);
   assert.match(page, /message\.starred/);
   assert.match(page, /selfThread/);
+  assert.match(page, /Сообщение самому себе/);
   assert.doesNotMatch(page, /function toSaved/);
 });
 
@@ -65,6 +66,12 @@ test("secondary tabs keep WhatsApp-style status and honest empty-state geometry"
   assert.match(lock, /\.updates-list \.channel-discover/);
   assert.match(lock, /\.communities-empty,\s*\n\.calls-empty/);
   assert.match(lock, /\.communities-empty \.primary-button,\s*\n\.calls-empty \.primary-button/);
+});
+
+test("prototype-only chrome stays out of the main WhatsApp surfaces", () => {
+  assert.match(lock, /\.demo-footer,\s*\n\.chat-demo-note\s*\{\s*display: none !important;/s);
+  assert.match(lock, /@media \(max-width: 899px\)[\s\S]*\.conversation-row \.row-menu\s*\{\s*display: none;/);
+  assert.match(lock, /@media \(min-width: 900px\)[\s\S]*\.conversation-row:hover \.row-menu/);
 });
 
 test("parity lock prevents known visual regressions", () => {

@@ -1,18 +1,18 @@
-# Qazyna Bot Platform
+# JELI Bot Platform
 
-Qazyna keeps the simple, familiar messenger UX, while exposing Telegram-level platform power behind optional surfaces.
+JELI keeps the simple, familiar messenger UX, while exposing Telegram-level platform power behind optional surfaces.
 
 ## Product principle
 
 Do not overload Chats. A person who only wants messaging should never need to understand bots, APIs or Mini Apps.
 
 Platform features live in:
-- system manager bot `@QazynaBot`;
+- system manager bot `@JELIBot`;
 - Bot Studio (`/bots`);
 - Apps / discovery surface later;
 - per-chat bot and Mini App actions only when relevant.
 
-## 1. `@QazynaBot` — BotFather-class manager
+## 1. `@JELIBot` — BotFather-class manager
 
 The system manager bot should support both commands and buttons.
 
@@ -150,15 +150,15 @@ Users/admins must be able to see what a bot can access and revoke it per chat.
 
 ## 6. Mini Apps
 
-Mini Apps are the biggest platform multiplier. A Mini App can be a complete service inside Qazyna while Chats remains simple.
+Mini Apps are the biggest platform multiplier. A Mini App can be a complete service inside JELI while Chats remains simple.
 
 Required capabilities:
-- seamless Qazyna sign-in;
+- seamless JELI sign-in;
 - theme and safe-area API;
 - full-screen and compact modes;
 - back/main buttons;
 - chat context;
-- secure init data signed by Qazyna;
+- secure init data signed by JELI;
 - device storage abstraction;
 - file picker;
 - location with explicit user permission;
@@ -200,7 +200,7 @@ Provider API keys belong to the bot owner and must be stored server-side encrypt
 
 ## 8. No-code automation
 
-This can make Qazyna stronger than a pure BotFather clone.
+This can make JELI stronger than a pure BotFather clone.
 
 Visual Flow Builder blocks:
 - trigger: new message / command / join / payment / schedule;
@@ -229,7 +229,7 @@ Platform primitives:
 - refunds;
 - bot revenue dashboard.
 
-Payment implementation must follow iOS/Google Play rules for digital goods in the distributed mobile apps. Qazyna should keep the payment abstraction provider-neutral so Kazakhstan payment rails can be integrated where platform rules allow it.
+Payment implementation must follow iOS/Google Play rules for digital goods in the distributed mobile apps. JELI should keep the payment abstraction provider-neutral so Kazakhstan payment rails can be integrated where platform rules allow it.
 
 ## 10. Business mode
 
@@ -277,7 +277,7 @@ Do not build 20 disconnected demos. Ship one vertical slice at a time.
 
 ### Platform slice 1 — real bot
 1. real user account;
-2. create bot through `@QazynaBot` or Bot Studio;
+2. create bot through `@JELIBot` or Bot Studio;
 3. server issues production token;
 4. `getMe` equivalent;
 5. bot receives a user message;
@@ -311,4 +311,4 @@ Do not build 20 disconnected demos. Ship one vertical slice at a time.
 
 ## Success metric
 
-A developer should be able to go from "I have a Qazyna account" to a working echo bot in under 5 minutes, while a non-developer should be able to build a basic support bot without code.
+A developer should be able to go from "I have a JELI account" to a working echo bot in under 5 minutes, while a non-developer should be able to build a basic support bot without code.

@@ -57,3 +57,10 @@ test("legacy /bots surface only deep-links into BotJeli instead of rendering a d
   assert.match(bridge, /button\[aria-label=\"BotJeli\"\]/);
   assert.match(bridge, /button\.click\(\)/);
 });
+
+test("BotJeli exposes BotFather-style commands inside the normal chat composer", async () => {
+  const bar = await readFile(new URL("../components/botjeli-command-bar.tsx", import.meta.url), "utf8");
+  for (const text of ["Создать бота", "Мои боты", "Помощь", "/newbot", "/mybots", "/help"]) assert.ok(bar.includes(text));
+  assert.match(bar, /form\.requestSubmit\(\)/);
+  assert.doesNotMatch(bar, /Webhook|Mini App|API token/);
+});

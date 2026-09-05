@@ -1,11 +1,20 @@
 {
-  "name": "Qazyna — мессенджер",
+  "name": "Qazyna — мессенджер и платформа",
   "short_name": "Qazyna",
-  "description": "Чаты, группы и каналы — интерактивный прототип",
+  "description": "Чаты, сообщества, каналы, боты и Mini Apps",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#f4f4f8",
+  "theme_color": "#5b5bd6",
   "lang": "ru",
-  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }],
+  "shortcuts": [
+    {
+      "name": "Bot Studio",
+      "short_name": "Bots",
+      "description": "Создание и управление Qazyna-ботами",
+      "url": "/bots",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
 }

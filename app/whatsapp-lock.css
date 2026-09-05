@@ -1,5 +1,5 @@
 /* Lock visual parity to the WhatsApp reference instead of allowing the old
-   prototype theme controls to drift the interface away from the benchmark. */
+   prototype controls to drift the interface away from the benchmark. */
 .messenger-shell,
 .messenger-shell[data-accent="blue"],
 .messenger-shell[data-accent="green"] {
@@ -11,15 +11,39 @@
   --outgoing: var(--wa-outgoing);
 }
 
-/* The current WhatsApp chat list does not repeat a separate "Chats" heading
-   below the top app bar. Keep the h1 in the DOM for semantics/tests, but do
-   not render that duplicate row. The archive view still gets its back row. */
+/* Current WhatsApp does not repeat a second section title underneath its app
+   bar. Keep the h1 in the DOM for semantics/tests, but remove the duplicate
+   visual row. The archive view uses a different class and remains visible. */
 .title-row.normal-title {
   display: none;
 }
 
-/* The previous prototype exposed green/blue appearance presets. Visual-parity
-   mode has one product palette, so hide that obsolete customization section. */
+/* The old prototype exposed green/blue accent presets. Parity mode has one
+   product palette, so the obsolete appearance preset section is hidden. */
 .setting-section + .setting-section {
   display: none;
+}
+
+@media (max-width: 899px) {
+  /* The current Android Chats tab keeps the rounded search field visible.
+     Earlier parity code collapsed it behind the search icon, which made the
+     first screen visibly different from the reference. */
+  .chat-list-search.mobile-search-collapsed {
+    display: flex;
+  }
+
+  /* Once the search field is persistent, the extra search action in the top
+     Chats app bar becomes a duplicate. Scope the removal to the Chats header
+     only; other tabs keep their own action layout. */
+  .inbox-header:has(.chats-main-title) .whatsapp-list-actions > .icon-button:nth-child(2) {
+    display: none;
+  }
+
+  .inbox-header:has(.chats-main-title) {
+    padding-bottom: 0;
+  }
+
+  .chat-list-search {
+    margin-top: 0;
+  }
 }

@@ -151,6 +151,27 @@ jobs:
           PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop playwright-cli screenshot --filename=visual-artifacts/12-stories-1440x900.png
           PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop playwright-cli close
 
+      - name: Capture reactions and call screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: jeli-interactions-mobile
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 390x844
+        run: |
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli click 'role=button[name="Айгерим"]'
+          playwright-cli click 'role=button[name="Добавить реакцию 1"]'
+          playwright-cli click 'role=menuitem[name="Поставить ❤️"]'
+          playwright-cli screenshot --filename=visual-artifacts/13-message-reaction-390x844.png
+          playwright-cli click 'role=button[name="Видеозвонок"]'
+          playwright-cli screenshot --filename=visual-artifacts/14-video-call-390x844.png
+          playwright-cli click 'role=button[name="Завершить звонок"]'
+          playwright-cli click 'role=button[name="Назад"]'
+          playwright-cli click 'role=button[name="Семья"]'
+          playwright-cli click 'role=button[name="Аудиозвонок"]'
+          playwright-cli screenshot --filename=visual-artifacts/15-group-audio-call-390x844.png
+          playwright-cli close
+
       - name: Upload visual captures
         uses: actions/upload-artifact@v4
         with:

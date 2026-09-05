@@ -44,6 +44,19 @@ test("Favorites are distinct from starred messages and Message Yourself", () => 
   assert.doesNotMatch(page, /function toSaved/);
 });
 
+test("Starred messages are a working source-linked surface", () => {
+  assert.match(page, /"starred" \| null/);
+  assert.match(page, /const starredMessages =/);
+  assert.match(page, /setModal\("starred"\)/);
+  assert.match(page, /openStarredMessage/);
+  assert.match(page, /className="modal-body starred-list"/);
+  assert.match(page, /className="starred-empty"/);
+  assert.match(lock, /\.starred-modal/);
+  assert.match(lock, /\.starred-list/);
+  assert.match(lock, /\.starred-empty/);
+  assert.match(lock, /\.new-chat-modal,\s*\n  \.starred-modal/);
+});
+
 test("New chat keeps the WhatsApp select-contact hierarchy on mobile", () => {
   assert.match(page, /new-chat-modal/);
   assert.match(page, /new-chat-shortcuts/);

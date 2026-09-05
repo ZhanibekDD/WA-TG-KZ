@@ -5,15 +5,20 @@ import { messengerCopy } from "../lib/messenger-copy.ts";
 
 const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
 const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+const parityStyles = await readFile(new URL("../app/whatsapp-parity.css", import.meta.url), "utf8");
 const manifest = JSON.parse(await readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"));
 
-test("messenger-first navigation replaces the feed and service catalog", () => {
+test("WhatsApp-like primary navigation keeps messaging first", () => {
   assert.match(page, /useState<View>\("chats"\)/);
-  for (const view of ["chats", "updates", "calls", "settings"]) assert.ok(page.includes('id: "' + view + '"'));
-  for (const retired of ['"feed"', '"communities"', '"services"']) assert.ok(!page.includes(retired));
+  for (const view of ["chats", "updates", "communities", "calls"]) assert.ok(page.includes('id: "' + view + '"'));
+  assert.match(page, /switchView\("settings"\)/);
+  for (const retired of ['"feed"', '"services"']) assert.ok(!page.includes(retired));
   assert.match(page, /conversation-open-mobile/);
   assert.match(styles, /\.conversation-open-mobile \.inbox-panel/);
   assert.match(styles, /@media \(max-width: 899px\)/);
+  assert.match(parityStyles, /--wa-green:/);
+  assert.match(parityStyles, /grid-template-columns: repeat\(4/);
+  assert.match(parityStyles, /\.composer-form \.camera-button/);
 });
 
 test("both locales contain complete nonempty interface copy and explain demo limits", () => {

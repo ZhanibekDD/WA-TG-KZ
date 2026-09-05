@@ -5,6 +5,12 @@
   box-shadow: none !important;
 }
 
+.jeli-story-avatar.mine img,
+.jeli-story-card.mine > span > img {
+  content: url('/jeli-icon.svg');
+  object-fit: cover;
+}
+
 /* Keep the mobile Bot Studio back affordance readable after the JELI rename. */
 @media (max-width: 800px) {
   .bot-studio-back {

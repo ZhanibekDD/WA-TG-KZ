@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Dialog, DropdownMenu, Popover } from "radix-ui";
-import { Archive, ArrowLeft, BellOff, Bookmark, Check, ChevronDown, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Palette, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Settings, Shield, Smile, Trash2, UsersRound, Video, X } from "lucide-react";
+import { Archive, ArrowLeft, BellOff, Bookmark, Camera, Check, ChevronDown, ChevronRight, CircleHelp, CircleUserRound, Clock3, Copy, FileText, Info, Languages, Megaphone, MessageCircle, MessageSquarePlus, Mic, MoreVertical, Palette, Paperclip, Pencil, Phone, Pin, Plus, Reply, Search, Send, Shield, Smile, Trash2, UsersRound, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { contacts, createDemoState, localize, MAX_ATTACHMENT_BYTES, MAX_MESSAGE_LENGTH, MAX_SESSION_ATTACHMENT_BYTES, messengerReducer, selectThreads, type Attachment, type Filter, type Locale, type Message, type Thread } from "@/lib/messenger";
 import { messengerCopy, type MessengerCopy } from "@/lib/messenger-copy";
 
-type View = "chats" | "updates" | "calls" | "settings";
+type View = "chats" | "updates" | "communities" | "calls" | "settings";
 type Modal = "new" | "about" | "call" | "voice" | "info" | "status" | "view-status" | null;
 type Draft = { text: string; replyTo?: string; editing?: string; attachment?: Attachment };
 const emptyDraft: Draft = { text: "" };
@@ -47,6 +47,7 @@ export default function HomePage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [archived, setArchived] = useState(false);
+  const [listSearchOpen, setListSearchOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [messageQuery, setMessageQuery] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -76,11 +77,14 @@ export default function HomePage() {
   const visibleMessages = messages.filter(message => localize(message.body, locale).toLocaleLowerCase().includes(messageQuery.toLocaleLowerCase()));
   const searchContacts = contacts.filter(contact => contact.name.toLocaleLowerCase().includes(contactQuery.toLocaleLowerCase()));
   const replyMessage = messages.find(message => message.id === draft.replyTo);
+  const communitiesLabel = locale === "ru" ? "Сообщества" : "Қауымдастықтар";
+  const viewLabels: Record<View, string> = { chats: t.chats, updates: t.updates, communities: communitiesLabel, calls: t.calls, settings: t.settings };
+  const viewLabel = viewLabels[view];
   const nav = [
     { id: "chats" as const, label: t.chats, icon: MessageCircle },
     { id: "updates" as const, label: t.updates, icon: Megaphone },
+    { id: "communities" as const, label: communitiesLabel, icon: UsersRound },
     { id: "calls" as const, label: t.calls, icon: Phone },
-    { id: "settings" as const, label: t.settings, icon: Settings },
   ];
 
   useEffect(() => { document.documentElement.lang = locale; }, [locale]);
@@ -113,6 +117,7 @@ export default function HomePage() {
   function switchView(next: View) {
     setView(next);
     setOpened(false);
+    setListSearchOpen(false);
     setSearchOpen(false);
     setMessageQuery("");
     if (next === "chats") { setArchived(false); setQuery(""); }
@@ -205,23 +210,28 @@ export default function HomePage() {
       <button className="profile-dot" onClick={() => switchView("settings")} aria-label={t.me}><CircleUserRound /></button>
     </nav>
 
-    <section className="inbox-panel" aria-label={t[view]}>
+    <section className="inbox-panel" aria-label={viewLabel}>
       <header className="inbox-header">
-        <div className="brand-row"><span>Qazyna</span><button className="demo-label" onClick={() => setModal("about")}>{t.demo}</button></div>
-        <div className="title-row">
-          <h1>{view === "chats" && archived ? t.archive : t[view]}</h1>
-          <div className="title-actions">
-            {view === "chats" && archived && <Button variant="ghost" size="icon" className="icon-button" onClick={() => setArchived(false)} aria-label={t.back}><ArrowLeft /></Button>}
-            {view === "chats" && <Button variant="ghost" size="icon" className="icon-button" onClick={newChat} aria-label={t.newChat} title={t.newChat}><MessageSquarePlus /></Button>}
+        <div className="brand-row">
+          <span>{view === "chats" ? "Qazyna" : viewLabel}</span>
+          <div className="whatsapp-list-actions">
+            {view === "chats" && <>
+              <Button variant="ghost" size="icon" className="icon-button" onClick={() => setNotice(locale === "ru" ? "Камера будет подключена в нативном приложении." : "Камера нативті қолданбада қосылады.")} aria-label={locale === "ru" ? "Камера" : "Камера"} title={locale === "ru" ? "Камера" : "Камера"}><Camera /></Button>
+              <Button variant="ghost" size="icon" className="icon-button" onClick={() => setListSearchOpen(value => !value)} aria-label={t.search} title={t.search}><Search /></Button>
+            </>}
             {view === "calls" && <Button variant="ghost" size="icon" className="icon-button" onClick={() => setModal("call")} aria-label={t.startCall}><Plus /></Button>}
-            <Button variant="ghost" size="icon" className="icon-button" onClick={() => switchView("settings")} aria-label={t.settings}><MoreVertical /></Button>
+            <Button variant="ghost" size="icon" className="icon-button" onClick={() => view === "settings" ? switchView("chats") : switchView("settings")} aria-label={view === "settings" ? t.back : t.settings}>{view === "settings" ? <ArrowLeft /> : <MoreVertical />}</Button>
           </div>
+        </div>
+        <div className={cn("title-row", view === "chats" && archived ? "archive-title" : "normal-title")}>
+          <h1 className={cn(view === "chats" && !archived && "chats-main-title")}>{view === "chats" && archived ? t.archive : viewLabel}</h1>
+          <div className="title-actions">{view === "chats" && archived && <Button variant="ghost" size="icon" className="icon-button" onClick={() => setArchived(false)} aria-label={t.back}><ArrowLeft /></Button>}</div>
         </div>
       </header>
 
       {view === "chats" && <>
-        <div className="search-box"><Search /><Input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search} />{query && <button onClick={() => setQuery("")} aria-label={t.close}><X /></button>}</div>
-        <div className="chat-filters" role="group" aria-label={t.chats}>{(["all", "unread", "groups", "channels"] as Filter[]).map(item => <button key={item} aria-pressed={filter === item} className={cn("filter-chip", filter === item && "active")} onClick={() => setFilter(item)}>{t[item]}</button>)}</div>
+        <div className={cn("search-box", "chat-list-search", !listSearchOpen && !query && "mobile-search-collapsed")}><Search /><Input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search} />{(query || listSearchOpen) && <button onClick={() => { setQuery(""); setListSearchOpen(false); }} aria-label={t.close}><X /></button>}</div>
+        <div className="chat-filters" role="group" aria-label={t.chats}>{(["all", "unread", "groups"] as Filter[]).map(item => <button key={item} aria-pressed={filter === item} className={cn("filter-chip", filter === item && "active")} onClick={() => setFilter(item)}>{t[item]}</button>)}</div>
         <div className="inbox-scroll">
           {!archived && <button className="archive-row" onClick={() => { setArchived(true); setFilter("all"); setQuery(""); }}><Archive /><span>{t.archive}</span><span>{archiveCount}</span></button>}
           {filtered.length ? <ul className="conversation-list">{filtered.map(threadRow)}</ul> : <div className="small-empty"><Search /><strong>{t.noChats}</strong><p>{t.noChatsHint}</p></div>}
@@ -240,6 +250,8 @@ export default function HomePage() {
         <h3 className="find-heading">{t.discover}</h3>
         {state.threads.filter(chat => chat.kind === "channel" && !chat.following).map(chat => <div className="channel-discover" key={chat.id}><button onClick={() => openChat(chat.id)}><Avatar chat={chat} /><span><strong>{localize(chat.name, locale)}</strong><small>{t.channelInfo}</small></span></button><Button variant="secondary" className="subscribe-small" onClick={() => dispatch({ type: "follow", chatId: chat.id })}>{t.follow}</Button></div>)}
       </div>}
+
+      {view === "communities" && <div className="inbox-scroll"><div className="small-empty communities-empty"><span className="empty-icon"><UsersRound /></span><strong>{communitiesLabel}</strong><p>{locale === "ru" ? "Объединяйте связанные группы в одном месте — как в WhatsApp." : "Байланысты топтарды WhatsApp-тағыдай бір жерде біріктіріңіз."}</p><Button className="primary-button" onClick={() => { setNewKind("group"); setGroupName(""); setSelectedContacts([]); setContactQuery(""); setModal("new"); }}><UsersRound />{locale === "ru" ? "Новое сообщество" : "Жаңа қауымдастық"}</Button><small>{t.soon}</small></div></div>}
 
       {view === "calls" && <div className="inbox-scroll"><div className="small-empty calls-empty"><span className="empty-icon"><Phone /></span><strong>{t.noCalls}</strong><p>{t.callsHint}</p><Button className="primary-button" onClick={() => setModal("call")}><Phone />{t.startCall}</Button><small>{t.soon}</small></div></div>}
 
@@ -261,7 +273,7 @@ export default function HomePage() {
           <button className="chat-identity" onClick={() => setModal("info")} aria-label={t.chatInfo}><Avatar chat={active} small /><span><strong>{localize(active.name, locale)}</strong><small>{infoText}</small></span></button>
           <div className="chat-header-actions">
             {active.kind !== "channel" && active.kind !== "saved" && <><Button variant="ghost" size="icon" className="icon-button" onClick={() => setModal("call")} aria-label={t.video} title={t.video}><Video /></Button><Button variant="ghost" size="icon" className="icon-button audio-call" onClick={() => setModal("call")} aria-label={t.phone} title={t.phone}><Phone /></Button><span className="header-divider" /></>}
-            <Button variant="ghost" size="icon" className="icon-button" onClick={() => { setSearchOpen(!searchOpen); setMessageQuery(""); }} aria-label={t.chatSearch} title={t.chatSearch}><Search /></Button>
+            <Button variant="ghost" size="icon" className="icon-button chat-search-action" onClick={() => { setSearchOpen(!searchOpen); setMessageQuery(""); }} aria-label={t.chatSearch} title={t.chatSearch}><Search /></Button>
             <ChatMenu chat={active} t={t} act={type => { dispatch({ type, chatId: activeId }); if (type === "archive") setOpened(false); }} />
           </div>
         </header>
@@ -301,8 +313,9 @@ export default function HomePage() {
           {(draft.replyTo || draft.editing) && <div className="compose-reference"><span>{draft.editing ? <Pencil /> : <Reply />}</span><div><strong>{draft.editing ? t.edit : t.reply}</strong><p>{draft.editing ? draft.text : replyMessage ? textFor(replyMessage) : t.quoteDeleted}</p></div><Button variant="ghost" size="icon" className="icon-button" onClick={() => draft.editing ? resetComposition() : updateDraft({ replyTo: undefined })} aria-label={t.cancel}><X /></Button></div>}
           {draft.attachment && !draft.editing && <div className="compose-attachment"><FileText /><div><strong>{draft.attachment.name}</strong><small>{t.attachmentHint}</small></div><Button variant="ghost" size="icon" className="icon-button" aria-label={t.delete} onClick={() => { releaseAttachment(draft.attachment); updateDraft({ attachment: undefined }); }}><X /></Button></div>}
           <form className="composer-form" onSubmit={send}>
-            <Popover.Root><Popover.Trigger asChild><Button type="button" variant="ghost" size="icon" className="icon-button" aria-label={t.emoji}><Smile /></Button></Popover.Trigger><Popover.Portal><Popover.Content className="emoji-menu" sideOffset={12} aria-label={t.emoji}>{["🙂", "❤️", "👍", "😂", "🙏", "🔥", "🤍", "😊", "👋", "🎉", "👌", "🇰🇿"].map(emoji => <Popover.Close key={emoji} asChild><button onClick={() => { updateDraft({ text: draft.text + emoji }); composeRef.current?.focus(); }} aria-label={emoji}>{emoji}</button></Popover.Close>)}</Popover.Content></Popover.Portal></Popover.Root>
-            <Button type="button" variant="ghost" size="icon" className="icon-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label={t.attachment} title={t.attachment}><Paperclip /></Button>
+            <Popover.Root><Popover.Trigger asChild><Button type="button" variant="ghost" size="icon" className="icon-button emoji-button" aria-label={t.emoji}><Smile /></Button></Popover.Trigger><Popover.Portal><Popover.Content className="emoji-menu" sideOffset={12} aria-label={t.emoji}>{["🙂", "❤️", "👍", "😂", "🙏", "🔥", "🤍", "😊", "👋", "🎉", "👌", "🇰🇿"].map(emoji => <Popover.Close key={emoji} asChild><button onClick={() => { updateDraft({ text: draft.text + emoji }); composeRef.current?.focus(); }} aria-label={emoji}>{emoji}</button></Popover.Close>)}</Popover.Content></Popover.Portal></Popover.Root>
+            <Button type="button" variant="ghost" size="icon" className="icon-button attach-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label={t.attachment} title={t.attachment}><Paperclip /></Button>
+            <Button type="button" variant="ghost" size="icon" className="icon-button camera-button" onClick={() => fileRef.current?.click()} disabled={!!draft.editing} aria-label={locale === "ru" ? "Фото" : "Фото"} title={locale === "ru" ? "Фото" : "Фото"}><Camera /></Button>
             <input type="file" ref={fileRef} hidden onChange={e => { attach(e.target.files?.[0]); e.target.value = ""; }} />
             <Textarea ref={composeRef} value={draft.text} rows={1} maxLength={MAX_MESSAGE_LENGTH} className="message-input" placeholder={t.message} aria-label={t.message} onChange={e => updateDraft({ text: e.target.value })} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
             {draft.text.trim() || draft.attachment || draft.editing ? <Button type="submit" size="icon" className="send-button" disabled={draft.editing ? !draft.text.trim() : !draft.text.trim() && !draft.attachment} aria-label={draft.editing ? t.save : t.send}>{draft.editing ? <Check /> : <Send />}</Button> : <Button type="button" variant="ghost" size="icon" className="icon-button mic-button" onClick={() => setModal("voice")} aria-label={t.voice} title={t.voice}><Mic /></Button>}

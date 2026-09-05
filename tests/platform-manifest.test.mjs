@@ -9,7 +9,8 @@ test("JELI manifest uses the final blended teal palette and icon", () => {
   assert.equal(manifest.short_name, "JELI");
   assert.equal(manifest.theme_color, "#18b5ad");
   assert.equal(manifest.background_color, "#f1f8f7");
-  assert.equal(manifest.icons[0].src, "/jeli-icon.png");
+  assert.equal(manifest.icons[0].src, "/jeli-icon.svg");
+  assert.equal(manifest.icons[0].type, "image/svg+xml");
 });
 
 test("Bot Studio and Stories are discoverable platform shortcuts", () => {

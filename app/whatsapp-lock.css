@@ -63,6 +63,90 @@
   color: var(--wa-secondary);
 }
 
+/* Starred messages are a separate WhatsApp surface. They point back to the
+   original conversation; starring never copies a message into the self chat. */
+.starred-modal {
+  width: min(520px, calc(100vw - 32px));
+  padding-bottom: 18px;
+}
+
+.starred-list {
+  margin: 16px -10px -8px;
+  color: var(--wa-text);
+}
+
+.starred-list > button {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.starred-list > button:hover {
+  background: var(--wa-hover);
+}
+
+.starred-list > button > span:nth-child(2) {
+  min-width: 0;
+}
+
+.starred-list strong,
+.starred-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.starred-list strong {
+  color: var(--wa-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.starred-list small {
+  margin-top: 4px;
+  color: var(--wa-secondary);
+  font-size: 12px;
+}
+
+.starred-list time {
+  align-self: start;
+  padding-top: 3px;
+  color: var(--wa-secondary);
+  font-size: 11px;
+}
+
+.starred-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 260px;
+  padding: 40px 24px;
+  color: var(--wa-secondary);
+  text-align: center;
+}
+
+.starred-empty svg {
+  width: 38px;
+  height: 38px;
+  stroke-width: 1.5;
+}
+
+.starred-empty p {
+  max-width: 300px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+}
+
 /* Select contact follows the WhatsApp hierarchy: actions first, then the
    contacts list. On desktop it remains a dialog; mobile turns it into a full
    screen route-like surface. */
@@ -340,7 +424,8 @@
     box-shadow: 0 10px 34px #0b141a38;
   }
 
-  .new-chat-modal {
+  .new-chat-modal,
+  .starred-modal {
     display: flex;
     flex-direction: column;
     left: 0;
@@ -355,7 +440,8 @@
     box-shadow: none;
   }
 
-  .new-chat-modal > h2 {
+  .new-chat-modal > h2,
+  .starred-modal > h2 {
     flex: 0 0 auto;
     min-height: 48px;
     margin: 0 42px 0 44px;
@@ -366,14 +452,39 @@
     font-weight: 600;
   }
 
+  .new-chat-modal > p,
+  .starred-modal > p {
+    margin-left: 44px;
+    color: var(--wa-secondary);
+    font-size: 12px;
+  }
+
   .new-chat-modal > p {
     display: none;
   }
 
-  .new-chat-modal .modal-close {
+  .new-chat-modal .modal-close,
+  .starred-modal .modal-close {
     left: 4px;
     right: auto;
     top: max(11px, env(safe-area-inset-top));
+  }
+
+  .starred-modal .modal-close svg {
+    transform: rotate(0deg);
+  }
+
+  .starred-list {
+    flex: 1;
+    min-height: 0;
+    margin: 8px -8px -8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .starred-list > button {
+    min-height: 70px;
+    border-radius: 0;
   }
 
   .new-chat-body {

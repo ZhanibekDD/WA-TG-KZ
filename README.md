@@ -1,15 +1,16 @@
 # JELI — мессенджер и платформа
 
-JELI использует знакомую, быструю геометрию современного мессенджера, но имеет собственную визуальную идентичность и платформенный слой: Stories, боты, Mini Apps, каналы, сообщества и будущие бизнес-инструменты.
+JELI строится по простой формуле: основной мессенджер должен ощущаться привычно как WhatsApp, Stories — быстро и полноэкранно как Telegram, а создание ботов — происходить внутри системного чата BotJeli по модели BotFather.
 
-**Статус: демонстрационный прототип интерфейса, не работающая сеть.** Все контакты и исходные сообщения вымышлены. Добавленные сообщения, вложения, группы, Stories, боты и настройки существуют локально до подключения настоящих аккаунтов и backend. Не добавляйте конфиденциальные данные.
+**Статус: демонстрационный прототип интерфейса, не работающая сеть.** Контакты и исходные сообщения вымышлены. Новые сообщения, Stories и созданные через BotJeli боты пока существуют только локально до появления настоящих аккаунтов и backend. Не добавляйте конфиденциальные данные.
 
 ## Продуктовая формула
 
-- UX и плотность основной переписки: проверенные паттерны WhatsApp Android/Web.
-- Stories: Telegram-style компактная лента над чатами, быстрый viewer, privacy, archive и highlights.
-- Визуальная идентичность: собственный teal — смесь messenger green и sky blue.
-- Платформенные возможности: Telegram-level bots / Mini Apps / channels / communities, но без перегрузки основного Chats.
+- Chats / открытая переписка / New Chat / нижняя навигация: WhatsApp-like UX и плотность.
+- Stories: компактная лента над чатами + тёмный полноэкранный Telegram-like viewer.
+- Bots: только системный чат **BotJeli**, без отдельной пользовательской админ-панели.
+- Платформенные возможности: каналы, сообщества, Mini Apps, AI/business bots — за понятными точками входа, без перегрузки Chats.
+- Визуальная идентичность: JELI teal, зелёный × голубой, собственный круглый знак.
 - JELI не является официальным клиентом WhatsApp или Telegram.
 
 ## Что уже есть
@@ -17,84 +18,89 @@ JELI использует знакомую, быструю геометрию с
 | Сценарий | Реализация в этой версии |
 |---|---|
 | Главный экран | Список чатов, поиск, архив, фильтры «Все / Непрочитанные / Избранное / Группы» |
-| Stories | Горизонтальная лента над Chats + `/stories` viewer + реакция/ответ/privacy/duration/archive/highlights |
-| Story privacy | Все / Контакты / Близкие друзья / Выбранные контакты |
-| Story duration | 6 / 12 / 24 / 48 часов |
+| Stories rail | Компактные аватары над Chats, не вытесняют список чатов |
+| Stories viewer | Тёмный fullscreen viewer; mobile = весь экран, desktop = вертикальная карточка по центру |
+| Story actions | Prev/next, reply, reaction, privacy, duration, archive, pinned profile stories |
+| BotJeli | Обычный системный чат в списке сообщений |
+| Создание бота | `/newbot` → имя → username → локальный test token прямо в переписке |
+| Управление ботами | `/mybots`, `/help`; production Bot API подключается позже |
 | Favorites | Отдельный список любимых чатов, не связанный с pinning |
 | Starred messages | Звёздочка хранится на исходном сообщении; отдельный список ведёт обратно в исходный чат |
-| Message Yourself | Отдельный чат «Вы / Сіз»; starred messages туда не копируются |
+| Message Yourself | Отдельный чат «Вы / Сіз» |
 | Телефон | «Чаты / Обновления / Сообщества / Звонки»; Settings через More |
 | Новый чат | Полноэкранный Select contact: новая группа / новый контакт / новое сообщество / контакты |
-| Компьютер | Компактная rail + список чатов + переписка |
+| Компьютер | Rail + список чатов + открытая переписка |
 | Переписка | Текст, emoji, reply, edit/delete своих сообщений, star, contextual menu |
 | Композер | Emoji, вложение, камера и отдельная mic/send кнопка |
-| Обновления | Channels и существующий transition-слой статусов; основной Stories UX вынесен над Chats |
-| Сообщества | Отдельная основная вкладка без вымышленных membership-данных |
-| Звонки | Честное пустое состояние; реальных звонков пока нет |
-| Бренд | Видимое имя JELI, teal `#18b5ad`, круглый `public/jeli-icon.png` |
-| Bot Studio | `/bots`: создание bot draft, username, `jeli_demo_...` token, commands, webhook, Mini App URL, scopes |
+| Каналы | Находятся в Updates и не смешиваются с обычными Chats |
+| Звонки | UI существует, реальные звонки пока не подключены |
+| Бренд | JELI, teal `#18b5ad`, круглый `public/jeli-icon.svg` |
 
-## JELI Stories
+## Stories
 
-Stories foundation использует `lib/jeli-stories.ts` и отдельный `/stories` экран. Созданные пользователем истории пока сохраняются локально — production delivery и viewer list появятся только вместе с реальными аккаунтами/backend.
+Stories используют `lib/jeli-stories.ts`. Созданные пользователем истории пока сохраняются локально.
 
-Реализованный UX:
-- expandable/compact rail над чатами;
-- быстрый viewer;
+Текущий UX:
+- компактная лента над Chats;
+- fullscreen viewer без отдельной белой «веб-страницы»;
 - реакции и reply;
-- privacy rules;
-- 6/12/24/48h duration;
+- privacy: Everyone / Contacts / Close Friends / Selected Contacts;
+- 6 / 12 / 24 / 48 часов;
 - archive;
-- pinned profile highlights;
-- UI-флаг content protection;
+- pinned profile stories;
 - локальный compose flow.
 
-## Bot Platform
+## BotJeli
 
-Bot Studio foundation открыт по пути `/bots` и опубликован как PWA shortcut. Сейчас он создаёт только локальные draft-боты и `jeli_demo_...` test tokens — они **не работают в сети**.
+Отдельный пользовательский Bot Studio удалён. Единственный основной UX создания бота — **чат BotJeli**.
 
-Production-концепция описана в [docs/BOT_PLATFORM.md](docs/BOT_PLATFORM.md):
-- системный `@JELIBot` как BotFather-class manager;
-- Bot API v1;
-- production token issuance / rotate / revoke;
-- signed webhooks + retries;
-- permission scopes;
-- Mini Apps;
-- AI bots;
-- no-code Flow Builder;
-- payments/subscriptions;
-- business inbox + CRM;
-- Bot/App marketplace.
+Текущий локальный flow:
+1. `/newbot`;
+2. BotJeli спрашивает имя;
+3. BotJeli спрашивает username, который заканчивается на `bot`;
+4. после валидного username выдаётся `jeli_demo_...` test token;
+5. `/mybots` показывает ботов, созданных в текущей сессии.
 
-## Visual baseline и JELI brand
+Production roadmap: server-issued token, `getMe`, signed webhooks, rotate/revoke, scopes, Mini Apps, AI bots, no-code automation и audit log.
 
-Ключевая messenger-геометрия зафиксирована отдельным strict baseline. Цветовой слой и JELI Stories развиваются отдельно, поэтому новые функции не должны ломать привычную плотность Chats.
+## Visual / CI gates
 
-GitHub Actions выполняет production build / TypeScript / ESLint / tests и реальный Chromium visual-capture. Artifact `jeli-ui-screenshots` содержит контрольные PNG мессенджера, Bot Studio и Stories.
+GitHub Actions выполняет:
+- production build;
+- TypeScript;
+- ESLint;
+- полный test suite;
+- Chromium capture мессенджера mobile/desktop;
+- Chromium capture **BotJeli внутри мессенджера**;
+- Chromium capture Stories mobile/desktop.
+
+Artifact: `jeli-ui-screenshots`.
 
 ## Чего пока нет
 
-- регистрации по номеру телефона и настоящих аккаунтов;
-- доставки между устройствами, серверного хранения и синхронизации;
-- production Stories media upload/delivery/viewers;
-- уведомлений и reconnect/offline очереди;
-- адресной книги устройства;
+- регистрации по номеру и настоящих аккаунтов;
+- server persistence / realtime / delivery states;
+- production Stories upload/delivery/viewers;
 - production Bot API и настоящих bot tokens;
+- push;
+- реальных аудио/видеозвонков и групповых звонков;
 - production Mini Apps runtime;
-- записи с микрофона, аудио- и видеозвонков;
-- сквозного шифрования и независимого security-аудита.
+- E2EE и независимого security-аудита.
 
 ## Следующие вертикальные срезы
 
-### Messenger slice
-Регистрация по номеру → два аккаунта → server persistence → realtime delivery → reconnect без дублей → delivery/read states.
+### Messenger
+Регистрация → два аккаунта → server persistence → realtime → reconnect → delivered/read → reactions.
 
-### Stories slice
-Account-backed upload → privacy enforcement → viewers/reactions/replies → archive → profile highlights.
+### Calls
+WebRTC audio 1:1 → video 1:1 → TURN/reconnect → group calls → screen sharing.
 
-### Bot slice
-Создать бота через `@JELIBot`/Bot Studio → сервер выдаёт токен → `getMe` → webhook получает сообщение → бот отвечает → rotate/revoke token → audit log.
+### Stories
+Account-backed media upload → privacy enforcement → viewers/reactions/replies → archive/profile.
 
-После этого — Mini Apps, AI/business bots и no-code automation.
+### BotJeli
+Server-issued bot token → `getMe` → signed webhook → bot reply → rotate/revoke → audit log.
 
-Технологии: React 19, TypeScript, Vinext, Tailwind CSS, Radix UI и Lucide. Текущая сборка совместима с Cloudflare Workers; решения о production-инфраструктуре и хранении данных принимаются отдельно.
+После этого — Mini Apps, AI/business bots, payments и no-code automation.
+
+Технологии: React 19, TypeScript, Vinext, Tailwind CSS, Radix UI и Lucide. Текущая сборка совместима с Cloudflare Workers; production-инфраструктура выбирается отдельно.

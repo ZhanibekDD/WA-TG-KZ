@@ -97,20 +97,23 @@ test("archive, pinned ordering, mute and restoration are reversible", () => {
   assert.equal(state.threads.find(t => t.id === "daniyar").archived, false);
 });
 
-test("search matches localised names and message bodies, without leaking archived or unfollowed chats", () => {
+test("search matches localised names and message bodies without mixing channels into Chats", () => {
   const state = createDemoState();
   assert.deepEqual(ids(selectThreads(state, "all", "  ОТБАСЫ ", false, "kk")), ["family"]);
   assert.deepEqual(ids(selectThreads(state, "all", "19:00", false, "ru")), ["aigerim"]);
   assert.deepEqual(selectThreads(state, "all", "Планы на выходные", false, "ru"), []);
   assert.deepEqual(ids(selectThreads(state, "groups", "", false, "ru")), ["family", "team"]);
   assert.deepEqual(ids(selectThreads(state, "channels", "", false, "ru")), ["qazyna"]);
+  assert.ok(!ids(selectThreads(state, "all", "", false, "ru")).includes("qazyna"));
   assert.equal(localize(state.threads.find(t => t.id === "family").name, "ru"), "Семья");
 });
 
-test("following adds a channel to chats and unfollowing removes it", () => {
+test("following changes Updates membership without leaking channels into Chats", () => {
   const before = createDemoState();
+  assert.ok(!ids(selectThreads(before, "all", "", false, "ru")).includes("qazyna"));
   const after = reduce(before, { type: "follow", chatId: "qazaqtech" });
   assert.ok(ids(selectThreads(after, "channels", "", false, "ru")).includes("qazaqtech"));
+  assert.ok(!ids(selectThreads(after, "all", "", false, "ru")).includes("qazaqtech"));
   const restored = reduce(after, { type: "follow", chatId: "qazaqtech" });
   assert.deepEqual(selectThreads(restored, "channels", "", false, "ru"), selectThreads(before, "channels", "", false, "ru"));
 });

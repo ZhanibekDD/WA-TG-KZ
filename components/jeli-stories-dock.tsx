@@ -37,7 +37,7 @@ export function JeliStoriesDock() {
 
   return <aside className="jeli-stories-dock" aria-label="Stories">
     <Link href="/stories?compose=1" className="jeli-story-dock-item mine" aria-label="Добавить историю">
-      <span className="jeli-story-avatar mine"><img src="/jeli-icon.png" alt="" /><b><Plus /></b></span>
+      <span className="jeli-story-avatar mine"><img src="/jeli-icon.svg" alt="" /><b><Plus /></b></span>
       <small>Моя история</small>
     </Link>
     {stories.map(story => <Link key={story.id} href={`/stories?story=${encodeURIComponent(story.id)}`} className="jeli-story-dock-item" aria-label={`История ${story.author}`}>

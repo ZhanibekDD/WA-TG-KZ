@@ -3,6 +3,7 @@ import "./globals.css";
 import "./whatsapp-parity.css";
 import "./whatsapp-lock.css";
 import "./whatsapp-desktop-lock.css";
+import "./whatsapp-strict-2026.css";
 
 export const metadata: Metadata = {
   title: "Qazyna — мессенджер",

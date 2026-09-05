@@ -86,16 +86,16 @@ export function JeliMessageReactions() {
   };
 
   return <>
-    {bubbles.map(bubble => {
+    {bubbles.map((bubble, index) => {
       const key = bubble.dataset.jeliReactionKey;
       if (!key) return null;
       const selected = reactions[key];
       return createPortal(
         <>
-          <button type="button" className="jeli-reaction-add" aria-label="Добавить реакцию" onClick={event => { event.stopPropagation(); setActiveKey(current => current === key ? null : key); }}>☺</button>
+          <button type="button" className="jeli-reaction-add" aria-label={`Добавить реакцию ${index + 1}`} onClick={event => { event.stopPropagation(); setActiveKey(current => current === key ? null : key); }}>☺</button>
           {selected && <button type="button" className="jeli-reaction-pill" aria-label={`Реакция ${selected}`} onClick={event => { event.stopPropagation(); setActiveKey(key); }}>{selected}<span>1</span></button>}
           {activeKey === key && <div className="jeli-reaction-picker" role="menu" aria-label="Реакции">
-            {REACTIONS.map(emoji => <button type="button" role="menuitem" key={emoji} className={selected === emoji ? "active" : ""} onClick={event => { event.stopPropagation(); choose(key, emoji); }}>{emoji}</button>)}
+            {REACTIONS.map(emoji => <button type="button" role="menuitem" aria-label={`Поставить ${emoji}`} key={emoji} className={selected === emoji ? "active" : ""} onClick={event => { event.stopPropagation(); choose(key, emoji); }}>{emoji}</button>)}
           </div>}
         </>,
         bubble,

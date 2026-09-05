@@ -1,0 +1,15 @@
+/* Approved JELI logo must win over generic accent backgrounds. */
+.wordmark-icon {
+  background: url('/jeli-icon.png') center / cover no-repeat !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep the mobile Bot Studio back affordance readable after the JELI rename. */
+@media (max-width: 800px) {
+  .bot-studio-back {
+    width: 52px !important;
+    color: var(--qz-primary-strong) !important;
+    font-size: 12px !important;
+  }
+}

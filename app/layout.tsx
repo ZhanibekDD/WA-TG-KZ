@@ -8,13 +8,13 @@ import "./qazyna-brand.css";
 import "./product-teal.css";
 
 export const metadata: Metadata = {
-  title: "Qazyna — мессенджер",
-  description: "Qazyna — удобный мессенджер и платформа для чатов, сообществ, каналов, ботов и мини-приложений. Русский и қазақша.",
-  applicationName: "Qazyna",
+  title: "JELI — мессенджер",
+  description: "JELI — удобный мессенджер и платформа для чатов, Stories, сообществ, каналов, ботов и Mini Apps. Русский и қазақша.",
+  applicationName: "JELI",
   manifest: "/manifest.webmanifest",
   formatDetection: { telephone: false },
   other: { "codex-preview": "development" },
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg", apple: "/favicon.svg" },
+  icons: { icon: "/jeli-icon.png", shortcut: "/jeli-icon.png", apple: "/jeli-icon.png" },
 };
 
 export const viewport: Viewport = { themeColor: "#18b5ad", width: "device-width", initialScale: 1, viewportFit: "cover" };

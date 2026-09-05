@@ -218,6 +218,7 @@ export default function HomePage() {
 
   const linkedDevicesNotice = locale === "ru" ? "Связанные устройства появятся после подключения реальных аккаунтов и сессий." : "Байланыстырылған құрылғылар нақты аккаунттар мен сессиялар қосылғаннан кейін пайда болады.";
   const starredNotice = locale === "ru" ? "Отдельный список избранных сообщений будет подключён вместе с постоянным хранением." : "Таңдаулы хабарламалардың жеке тізімі тұрақты сақтау қосылғанда іске қосылады.";
+  const newContactNotice = locale === "ru" ? "Создание настоящего контакта подключим вместе с адресной книгой устройства." : "Нақты контакт жасау құрылғының мекенжай кітабы қосылғанда іске қосылады.";
 
   return <main className={cn("messenger-shell", opened && "conversation-open-mobile")} data-accent="green">
     <nav className="desktop-rail" aria-label={t.chats}>
@@ -356,25 +357,35 @@ export default function HomePage() {
     <nav className="mobile-nav" aria-label={t.typeHint}>{nav.map(item => <button className={cn(view === item.id && "active")} onClick={() => switchView(item.id)} aria-current={view === item.id ? "page" : undefined} key={item.id}><span><item.icon />{item.id === "chats" && unread > 0 && <b>{unread}</b>}</span><small>{item.label}</small></button>)}</nav>
 
     <Dialog.Root open={modal !== null} onOpenChange={value => { if (!value) setModal(null); }}>
-      <Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className={cn("modal-content", modal === "view-status" && "status-modal")} onOpenAutoFocus={() => { modalOpener.current = document.activeElement as HTMLElement | null; }} onCloseAutoFocus={e => { e.preventDefault(); if (modalOpener.current?.getClientRects().length) modalOpener.current.focus(); else composeRef.current?.focus(); }}>
+      <Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className={cn("modal-content", modal === "view-status" && "status-modal", modal === "new" && "new-chat-modal")} onOpenAutoFocus={() => { modalOpener.current = document.activeElement as HTMLElement | null; }} onCloseAutoFocus={e => { e.preventDefault(); if (modalOpener.current?.getClientRects().length) modalOpener.current.focus(); else composeRef.current?.focus(); }}>
         <Dialog.Title>{modal === "new" ? newKind === "group" ? t.newGroup : t.newChat : modal === "call" ? t.notReadyTitle : modal === "voice" ? t.voice : modal === "info" ? localize(active.name, locale) : modal === "status" ? t.myStatus : modal === "view-status" ? viewedStatus?.name : t.demoTitle}</Dialog.Title>
-        <Dialog.Description>{modal === "new" ? t.groupHint : modal === "call" ? t.notReadyHint : modal === "voice" ? t.voiceHint : modal === "info" ? infoText : modal === "status" || modal === "view-status" ? t.statusHint : t.demoHint}</Dialog.Description>
-        <Dialog.Close asChild><Button variant="ghost" size="icon" className="icon-button modal-close" aria-label={t.close}><X /></Button></Dialog.Close>
+        <Dialog.Description>{modal === "new" ? newKind === "group" ? t.groupHint : locale === "ru" ? "Выберите контакт, чтобы начать переписку." : "Хат алмасуды бастау үшін контактіні таңдаңыз." : modal === "call" ? t.notReadyHint : modal === "voice" ? t.voiceHint : modal === "info" ? infoText : modal === "status" || modal === "view-status" ? t.statusHint : t.demoHint}</Dialog.Description>
+        <Dialog.Close asChild><Button variant="ghost" size="icon" className="icon-button modal-close" aria-label={t.close}>{modal === "new" ? <ArrowLeft /> : <X />}</Button></Dialog.Close>
         {modal === "about" && <div className="modal-body"><p>{t.demoDetails}</p><h3><Shield />{t.privacy}</h3><p>{t.privacyHint}</p></div>}
         {modal === "voice" && <div className="modal-body"><Button className="primary-button" onClick={() => { setModal(null); fileRef.current?.click(); }}><Paperclip />{t.attachment}</Button></div>}
         {modal === "info" && <div className="modal-body info-body"><Avatar chat={active} /><p>{messages.length} {t.messageCount}</p>{active.members && <ul className="member-list"><li>{t.you}</li>{active.members.map(id => <li key={id}>{contacts.find(person => person.id === id)?.name ?? id}</li>)}</ul>}<p>{t.demoShort}</p></div>}
-        {modal === "new" && <div className="modal-body">
-          <div className="segmented" role="group" aria-label={t.newChat}><button className={newKind === "direct" ? "active" : ""} aria-pressed={newKind === "direct"} onClick={() => setNewKind("direct")}>{t.newChat}</button><button className={newKind === "group" ? "active" : ""} aria-pressed={newKind === "group"} onClick={() => setNewKind("group")}>{t.newGroup}</button></div>
-          <form onSubmit={createGroup}>
-            {newKind === "group" && <label className="field-label">{t.groupName}<Input value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={64} required /></label>}
-            <label className="field-label">{t.contacts}<Input value={contactQuery} onChange={e => setContactQuery(e.target.value)} placeholder={t.search} /></label>
-            <div className="contact-picker">
-              {newKind === "direct" && !contactQuery && <button type="button" onClick={() => startDirect("saved")}><Avatar chat={{ initials: "", kind: "saved", color: "#5b9ecd" }} /><strong>{t.saved}</strong></button>}
-              {searchContacts.map(person => newKind === "direct" ? <button type="button" key={person.id} onClick={() => startDirect(person.id)}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong></button> : <label className="contact-checkbox" key={person.id}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong><input type="checkbox" checked={selectedContacts.includes(person.id)} onChange={e => setSelectedContacts(current => e.target.checked ? [...current, person.id] : current.filter(id => id !== person.id))} /></label>)}
+        {modal === "new" && <div className="modal-body new-chat-body">
+          {newKind === "direct" ? <>
+            <div className="new-chat-shortcuts">
+              <button type="button" onClick={() => { setNewKind("group"); setContactQuery(""); }}><span className="new-chat-action-icon"><UsersRound /></span><strong>{locale === "ru" ? "Новая группа" : "Жаңа топ"}</strong></button>
+              <button type="button" onClick={() => setNotice(newContactNotice)}><span className="new-chat-action-icon"><CircleUserRound /></span><strong>{locale === "ru" ? "Новый контакт" : "Жаңа контакт"}</strong></button>
+              <button type="button" onClick={() => { setModal(null); switchView("communities"); }}><span className="new-chat-action-icon"><UsersRound /></span><strong>{locale === "ru" ? "Новое сообщество" : "Жаңа қауымдастық"}</strong></button>
+            </div>
+            <label className="field-label new-chat-search">{locale === "ru" ? "Контакты в Qazyna" : "Qazyna-дағы контактілер"}<Input value={contactQuery} onChange={e => setContactQuery(e.target.value)} placeholder={t.search} /></label>
+            <div className="contact-picker whatsapp-contact-picker">
+              {!contactQuery && <button type="button" onClick={() => startDirect("saved")}><Avatar chat={{ initials: "", kind: "saved", color: "#5b9ecd" }} /><strong>{t.saved}</strong></button>}
+              {searchContacts.map(person => <button type="button" key={person.id} onClick={() => startDirect(person.id)}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong></button>)}
               {!searchContacts.length && <p>{t.noMatches}</p>}
             </div>
-            {newKind === "group" && <Button type="submit" className="primary-button wide" disabled={!groupName.trim() || !selectedContacts.length}><UsersRound />{t.create} · {selectedContacts.length}</Button>}
-          </form>
+          </> : <form className="new-group-form" onSubmit={createGroup}>
+            <label className="field-label">{t.groupName}<Input value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={64} required /></label>
+            <label className="field-label">{t.contacts}<Input value={contactQuery} onChange={e => setContactQuery(e.target.value)} placeholder={t.search} /></label>
+            <div className="contact-picker">
+              {searchContacts.map(person => <label className="contact-checkbox" key={person.id}><Avatar chat={{ ...person, kind: "direct" }} /><strong>{person.name}</strong><input type="checkbox" checked={selectedContacts.includes(person.id)} onChange={e => setSelectedContacts(current => e.target.checked ? [...current, person.id] : current.filter(id => id !== person.id))} /></label>)}
+              {!searchContacts.length && <p>{t.noMatches}</p>}
+            </div>
+            <Button type="submit" className="primary-button wide" disabled={!groupName.trim() || !selectedContacts.length}><UsersRound />{t.create} · {selectedContacts.length}</Button>
+          </form>}
         </div>}
         {modal === "status" && <form className="modal-body" onSubmit={e => { e.preventDefault(); if (statusDraft.trim()) { setMyStatus(statusDraft.trim()); setStatusDraft(""); setModal(null); } }}><Textarea value={statusDraft} maxLength={500} onChange={e => setStatusDraft(e.target.value)} placeholder={t.statusPlaceholder} aria-label={t.statusPlaceholder} required /><Button className="primary-button wide" disabled={!statusDraft.trim()}>{t.publish}</Button></form>}
         {modal === "view-status" && <div className="status-text">{viewedStatus?.text}</div>}

@@ -1,0 +1,260 @@
+/* Strict visual baseline for the WhatsApp-parity mode.
+   Reference: WhatsApp Android stable updated 2026-09-02 and current WhatsApp Web.
+   This layer intentionally comes last and owns the high-salience geometry. */
+
+:root {
+  --wa-appbar-mobile: 56px;
+  --wa-search-mobile: 44px;
+  --wa-filter-mobile: 32px;
+  --wa-row-mobile: 72px;
+  --wa-avatar-mobile: 52px;
+  --wa-bottom-nav-mobile: 68px;
+  --wa-chatbar-mobile: 56px;
+  --wa-composer-mobile: 48px;
+  --wa-rail-desktop: 64px;
+  --wa-list-desktop: 400px;
+  --wa-chatbar-desktop: 60px;
+}
+
+html,
+body,
+.messenger-shell {
+  font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* Message bubbles need a recognizable WhatsApp tail rather than generic rounded cards. */
+.message-bubble::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -7px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid #fff;
+  border-left: 8px solid transparent;
+}
+
+.outgoing .message-bubble::before {
+  left: auto;
+  right: -7px;
+  border-top-color: var(--wa-outgoing);
+  border-left: 0;
+  border-right: 8px solid transparent;
+}
+
+/* Keep the interaction density close to WhatsApp Web. */
+@media (min-width: 900px) {
+  .messenger-shell {
+    grid-template-columns: var(--wa-rail-desktop) var(--wa-list-desktop) minmax(0, 1fr) !important;
+  }
+
+  .desktop-rail {
+    width: var(--wa-rail-desktop);
+  }
+
+  .inbox-header {
+    min-height: var(--wa-chatbar-desktop);
+    padding: 8px 12px 7px 16px;
+  }
+
+  .brand-row {
+    min-height: 44px;
+    line-height: 44px;
+  }
+
+  .chat-list-search {
+    height: 36px;
+    margin: 6px 12px 8px;
+  }
+
+  .conversation-row {
+    min-height: 72px;
+  }
+
+  .conversation-open {
+    min-height: 72px;
+  }
+
+  .chat-header {
+    height: var(--wa-chatbar-desktop);
+    min-height: var(--wa-chatbar-desktop);
+  }
+
+  .composer {
+    min-height: 62px;
+    padding: 9px 12px;
+  }
+
+  .message-input {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 899px) {
+  .inbox-header {
+    min-height: var(--wa-appbar-mobile);
+    padding: max(4px, env(safe-area-inset-top)) 6px 0 16px;
+  }
+
+  .brand-row {
+    min-height: var(--wa-appbar-mobile);
+    line-height: var(--wa-appbar-mobile);
+    font-size: 22px;
+  }
+
+  .whatsapp-list-actions .icon-button {
+    width: 40px;
+    height: 44px;
+    flex-basis: 40px;
+  }
+
+  .chat-list-search,
+  .chat-list-search input {
+    height: var(--wa-search-mobile);
+  }
+
+  .chat-list-search {
+    margin: 2px 12px 8px;
+    border-radius: 22px;
+    padding-inline: 14px;
+  }
+
+  .chat-filters {
+    min-height: 44px;
+    padding: 3px 12px 8px;
+  }
+
+  .filter-chip {
+    min-height: var(--wa-filter-mobile);
+    padding: 5px 13px;
+    border-radius: 16px;
+  }
+
+  .conversation-row,
+  .conversation-open {
+    min-height: var(--wa-row-mobile);
+  }
+
+  .avatar {
+    width: var(--wa-avatar-mobile);
+    height: var(--wa-avatar-mobile);
+    flex-basis: var(--wa-avatar-mobile);
+  }
+
+  .conversation-open {
+    gap: 12px;
+    padding-left: 12px;
+  }
+
+  .conversation-summary {
+    min-height: var(--wa-row-mobile);
+    padding: 13px 0 12px;
+  }
+
+  .conversation-title strong {
+    font-size: 16px;
+    line-height: 21px;
+    font-weight: 500;
+  }
+
+  .conversation-preview {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .mobile-nav {
+    min-height: calc(var(--wa-bottom-nav-mobile) + env(safe-area-inset-bottom));
+    padding: 5px 3px max(5px, env(safe-area-inset-bottom));
+  }
+
+  .mobile-nav button {
+    min-height: 58px;
+  }
+
+  .mobile-nav button > span {
+    width: 52px;
+    height: 28px;
+    border-radius: 16px;
+  }
+
+  .mobile-nav small {
+    font-size: 11px;
+    line-height: 16px;
+  }
+
+  .new-chat-fab {
+    right: 16px;
+    bottom: calc(var(--wa-bottom-nav-mobile) + 14px + env(safe-area-inset-bottom));
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+  }
+
+  .chat-header {
+    min-height: var(--wa-chatbar-mobile);
+    height: var(--wa-chatbar-mobile);
+    padding: max(4px, env(safe-area-inset-top)) 4px 4px 2px;
+  }
+
+  .chat-identity .avatar.small {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .chat-identity strong {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .chat-identity small {
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .chat-history {
+    padding: 10px 8px 12px;
+  }
+
+  .message-row {
+    margin: 2px 0;
+  }
+
+  .message-bubble {
+    max-width: 86%;
+    padding: 6px 8px 4px;
+    border-radius: 0 8px 8px 8px;
+  }
+
+  .outgoing .message-bubble {
+    border-radius: 8px 0 8px 8px;
+  }
+
+  .message-body {
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .message-meta {
+    font-size: 10px;
+    line-height: 13px;
+  }
+
+  .composer {
+    min-height: 58px;
+    padding: 5px 5px max(5px, env(safe-area-inset-bottom));
+  }
+
+  .message-input {
+    min-height: var(--wa-composer-mobile);
+    padding: 11px 78px 11px 40px;
+    border-radius: 24px;
+  }
+
+  .send-button,
+  .mic-button {
+    width: var(--wa-composer-mobile) !important;
+    height: var(--wa-composer-mobile) !important;
+    flex-basis: var(--wa-composer-mobile) !important;
+  }
+}

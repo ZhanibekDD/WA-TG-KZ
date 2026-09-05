@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createDemoState, messengerReducer as reduce } from "../lib/messenger.ts";
 
@@ -46,4 +47,13 @@ test("BotJeli local token flow does not claim a production network API", () => {
   const body = state.messages.botjeli.at(-1).body.ru;
   assert.match(body, /локальном режиме/i);
   assert.match(body, /демонстрация этой вкладки/i);
+});
+
+test("legacy /bots surface only deep-links into BotJeli instead of rendering a dashboard", async () => {
+  const botsPage = await readFile(new URL("../app/bots/page.tsx", import.meta.url), "utf8");
+  const bridge = await readFile(new URL("../components/jeli-deep-link-bridge.tsx", import.meta.url), "utf8");
+  assert.match(botsPage, /redirect\("\/\?botjeli=1"\)/);
+  assert.doesNotMatch(botsPage, /Bot Studio|Username|Webhook|Mini App/);
+  assert.match(bridge, /button\[aria-label=\"BotJeli\"\]/);
+  assert.match(bridge, /button\.click\(\)/);
 });

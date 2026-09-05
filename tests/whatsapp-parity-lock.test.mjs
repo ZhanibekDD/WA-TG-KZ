@@ -5,6 +5,7 @@ import test from "node:test";
 const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
 const parity = await readFile(new URL("../app/whatsapp-parity.css", import.meta.url), "utf8");
 const lock = await readFile(new URL("../app/whatsapp-lock.css", import.meta.url), "utf8");
+const desktop = await readFile(new URL("../app/whatsapp-desktop-lock.css", import.meta.url), "utf8");
 
 test("mobile chats preserve the current WhatsApp information zones", () => {
   for (const view of ["chats", "updates", "communities", "calls"]) {
@@ -17,6 +18,16 @@ test("mobile chats preserve the current WhatsApp information zones", () => {
   assert.match(parity, /grid-template-columns: repeat\(4/);
   assert.match(parity, /\.new-chat-fab/);
   assert.match(parity, /\.composer-form \.camera-button/);
+});
+
+test("desktop Chats reuses the real New chat action in the WhatsApp Web header", () => {
+  assert.match(desktop, /@media \(min-width: 900px\)/);
+  assert.match(desktop, /\.title-row\.normal-title/);
+  assert.match(desktop, /\.new-chat-fab/);
+  assert.match(desktop, /top: 10px/);
+  assert.match(desktop, /right: 49px/);
+  assert.match(desktop, /\.top-search-action/);
+  assert.match(desktop, /\.whatsapp-list-actions > \.icon-button:first-child/);
 });
 
 test("top overflow and message actions use contextual menus", () => {

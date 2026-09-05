@@ -22,24 +22,35 @@ body,
   font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-/* Message bubbles need a recognizable WhatsApp tail rather than generic rounded cards. */
+/* Direct contacts in the real app do not expose prototype labels under their
+   name. Group/channel/self subtitles stay available where they carry meaning. */
+.chat-identity:has(.avatar.small:not(:has(svg))) small {
+  display: none;
+}
+
+/* Message bubbles use a compact WhatsApp tail rather than generic cards. */
 .message-bubble::before {
   content: "";
   position: absolute;
   top: 0;
-  left: -7px;
+  left: -5px;
   width: 0;
   height: 0;
-  border-top: 8px solid #fff;
-  border-left: 8px solid transparent;
+  border-top: 6px solid #fff;
+  border-left: 6px solid transparent;
 }
 
 .outgoing .message-bubble::before {
   left: auto;
-  right: -7px;
+  right: -5px;
   border-top-color: var(--wa-outgoing);
   border-left: 0;
-  border-right: 8px solid transparent;
+  border-right: 6px solid transparent;
+}
+
+.new-chat-search input,
+.new-chat-search input::placeholder {
+  font-weight: 400;
 }
 
 /* Keep the interaction density close to WhatsApp Web. */
@@ -67,10 +78,7 @@ body,
     margin: 6px 12px 8px;
   }
 
-  .conversation-row {
-    min-height: 72px;
-  }
-
+  .conversation-row,
   .conversation-open {
     min-height: 72px;
   }
@@ -78,6 +86,19 @@ body,
   .chat-header {
     height: var(--wa-chatbar-desktop);
     min-height: var(--wa-chatbar-desktop);
+  }
+
+  .chat-history {
+    padding-top: 16px;
+  }
+
+  .message-bubble {
+    padding: 5px 7px 3px;
+  }
+
+  .message-body {
+    font-size: 14px;
+    line-height: 18.5px;
   }
 
   .composer {
@@ -222,7 +243,7 @@ body,
 
   .message-bubble {
     max-width: 86%;
-    padding: 6px 8px 4px;
+    padding: 5px 7px 3px;
     border-radius: 0 8px 8px 8px;
   }
 
@@ -231,13 +252,14 @@ body,
   }
 
   .message-body {
-    font-size: 15px;
-    line-height: 20px;
+    font-size: 14.25px;
+    line-height: 18.75px;
   }
 
   .message-meta {
-    font-size: 10px;
-    line-height: 13px;
+    font-size: 9.5px;
+    line-height: 12px;
+    margin-top: 1px;
   }
 
   .composer {

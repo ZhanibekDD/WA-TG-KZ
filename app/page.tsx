@@ -323,7 +323,7 @@ export default function HomePage() {
                       <div className="message-meta">{message.edited && <span>{t.edited}</span>}<time dateTime={message.at}>{clock(message.at)}</time>{message.mine && <span title={t.noDelivery} aria-label={t.noDelivery}><Clock3 /></span>}</div>
                     </div>
                   </ContextMenu.Trigger>
-                  <ContextMenu.Portal><ContextMenu.Content className="context-menu message-context-menu" sideOffset={6} alignOffset={0} onCloseAutoFocus={e => { if (focusComposerAfterMenu.current) { e.preventDefault(); focusComposerAfterMenu.current = false; composeRef.current?.focus(); } }}>
+                  <ContextMenu.Portal><ContextMenu.Content className="context-menu message-context-menu" onCloseAutoFocus={e => { if (focusComposerAfterMenu.current) { e.preventDefault(); focusComposerAfterMenu.current = false; composeRef.current?.focus(); } }}>
                     {active.kind !== "channel" && <ContextItem action={() => { focusComposerAfterMenu.current = true; updateDraft({ replyTo: message.id, editing: undefined }); }}><Reply />{t.reply}</ContextItem>}
                     <ContextItem action={() => void copyMessage(message)}><Copy />{t.copy}</ContextItem>
                     {!message.attachment && <ContextItem action={() => toSaved(message)}><Bookmark />{t.saveTo}</ContextItem>}

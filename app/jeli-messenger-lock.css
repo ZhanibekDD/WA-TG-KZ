@@ -1,0 +1,19 @@
+/* Final JELI messenger guardrails: Stories belong to the chat list, never over an open chat. */
+@media (max-width: 899px) {
+  body:has(.messenger-shell.conversation-open-mobile) .jeli-stories-dock {
+    display: none !important;
+  }
+
+  body:has(.messenger-shell.conversation-open-mobile) .inbox-scroll {
+    padding-top: 0;
+  }
+}
+
+/* Legacy welcome copy is visually branded as JELI until the old base component is refactored. */
+.welcome-panel h2 {
+  font-size: 0 !important;
+}
+.welcome-panel h2::after {
+  content: "JELI";
+  font-size: 24px;
+}

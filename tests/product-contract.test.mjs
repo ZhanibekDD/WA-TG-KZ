@@ -32,13 +32,15 @@ test("both locales contain complete nonempty interface copy and explain demo lim
   assert.match(messengerCopy.ru.demoDetails, /Нет регистрации/);
 });
 
-test("web manifest describes the messenger without claiming an offline implementation", () => {
-  assert.equal(manifest.short_name, "Qazyna");
+test("web manifest describes JELI without claiming an offline implementation", () => {
+  assert.equal(manifest.short_name, "JELI");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.start_url, "/");
+  assert.match(manifest.name, /JELI/);
   assert.match(manifest.name, /мессенджер/);
   assert.equal(manifest.lang, "ru");
   assert.ok(manifest.icons.length > 0);
+  assert.equal(manifest.icons[0].src, "/jeli-icon.png");
 });
 
 test("demo does not silently request devices, upload attachments, or fake delivery", () => {

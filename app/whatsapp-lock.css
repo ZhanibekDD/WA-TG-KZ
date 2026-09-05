@@ -12,6 +12,13 @@
   --wa-hover: #f5f6f6;
 }
 
+/* Prototype disclosure stays reachable from About/Settings and delivery
+   notices, but it must not permanently distort the WhatsApp layout. */
+.demo-footer,
+.chat-demo-note {
+  display: none !important;
+}
+
 .title-row.normal-title {
   display: none;
 }
@@ -48,6 +55,12 @@
 .message-context-menu .menu-item {
   min-height: 42px;
   padding: 9px 12px;
+}
+
+.message-meta .message-star {
+  width: 11px;
+  height: 11px;
+  color: var(--wa-secondary);
 }
 
 /* Select contact follows the WhatsApp hierarchy: actions first, then the
@@ -281,7 +294,26 @@
   display: none;
 }
 
+/* WhatsApp does not show an overflow button on every chat row. Desktop keeps
+   it as a hover affordance for this prototype; mobile uses the chat header. */
+@media (min-width: 900px) {
+  .conversation-row .row-menu {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .conversation-row:hover .row-menu,
+  .conversation-row:focus-within .row-menu {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 @media (max-width: 899px) {
+  .conversation-row .row-menu {
+    display: none;
+  }
+
   .chat-list-search.mobile-search-collapsed {
     display: flex;
   }

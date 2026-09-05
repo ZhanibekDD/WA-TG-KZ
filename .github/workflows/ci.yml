@@ -69,21 +69,21 @@ jobs:
 
       - name: Start production server
         run: |
-          nohup npm run start -- --port 3000 --hostname 127.0.0.1 > /tmp/qazyna-server.log 2>&1 &
+          nohup npm run start -- --port 3000 --hostname 127.0.0.1 > /tmp/jeli-server.log 2>&1 &
           for i in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
               exit 0
             fi
             sleep 1
           done
-          cat /tmp/qazyna-server.log
+          cat /tmp/jeli-server.log
           exit 1
 
       - name: Capture mobile messenger screens
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
-          PLAYWRIGHT_CLI_SESSION: qazyna-mobile-390
+          PLAYWRIGHT_CLI_SESSION: jeli-mobile-390
           PLAYWRIGHT_MCP_VIEWPORT_SIZE: 390x844
         run: |
           mkdir -p visual-artifacts
@@ -105,7 +105,7 @@ jobs:
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
-          PLAYWRIGHT_CLI_SESSION: qazyna-mobile-412
+          PLAYWRIGHT_CLI_SESSION: jeli-mobile-412
           PLAYWRIGHT_MCP_VIEWPORT_SIZE: 412x915
         run: |
           playwright-cli open http://127.0.0.1:3000/
@@ -118,7 +118,7 @@ jobs:
         env:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
-          PLAYWRIGHT_CLI_SESSION: qazyna-desktop-1440
+          PLAYWRIGHT_CLI_SESSION: jeli-desktop-1440
           PLAYWRIGHT_MCP_VIEWPORT_SIZE: 1440x900
         run: |
           playwright-cli open http://127.0.0.1:3000/
@@ -130,17 +130,29 @@ jobs:
           PLAYWRIGHT_MCP_HEADLESS: "true"
           PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
         run: |
-          PLAYWRIGHT_CLI_SESSION=qazyna-bots-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open http://127.0.0.1:3000/bots
-          PLAYWRIGHT_CLI_SESSION=qazyna-bots-mobile playwright-cli screenshot --filename=visual-artifacts/09-bot-studio-390x844.png
-          PLAYWRIGHT_CLI_SESSION=qazyna-bots-mobile playwright-cli close
-          PLAYWRIGHT_CLI_SESSION=qazyna-bots-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open http://127.0.0.1:3000/bots
-          PLAYWRIGHT_CLI_SESSION=qazyna-bots-desktop playwright-cli screenshot --filename=visual-artifacts/10-bot-studio-1440x900.png
-          PLAYWRIGHT_CLI_SESSION=qazyna-bots-desktop playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-bots-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open http://127.0.0.1:3000/bots
+          PLAYWRIGHT_CLI_SESSION=jeli-bots-mobile playwright-cli screenshot --filename=visual-artifacts/09-bot-studio-390x844.png
+          PLAYWRIGHT_CLI_SESSION=jeli-bots-mobile playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-bots-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open http://127.0.0.1:3000/bots
+          PLAYWRIGHT_CLI_SESSION=jeli-bots-desktop playwright-cli screenshot --filename=visual-artifacts/10-bot-studio-1440x900.png
+          PLAYWRIGHT_CLI_SESSION=jeli-bots-desktop playwright-cli close
+
+      - name: Capture Stories screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+        run: |
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open 'http://127.0.0.1:3000/stories?story=sample-aigerim'
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-mobile playwright-cli screenshot --filename=visual-artifacts/11-stories-390x844.png
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-mobile playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open 'http://127.0.0.1:3000/stories?story=sample-aigerim'
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop playwright-cli screenshot --filename=visual-artifacts/12-stories-1440x900.png
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop playwright-cli close
 
       - name: Upload visual captures
         uses: actions/upload-artifact@v4
         with:
-          name: qazyna-ui-screenshots
+          name: jeli-ui-screenshots
           path: visual-artifacts/*.png
           if-no-files-found: error
           retention-days: 14

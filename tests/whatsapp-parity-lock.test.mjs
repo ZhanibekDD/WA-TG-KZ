@@ -18,12 +18,24 @@ test("mobile chats preserve the current WhatsApp information zones", () => {
   assert.match(parity, /\.composer-form \.camera-button/);
 });
 
+test("top overflow and message actions use contextual menus", () => {
+  assert.match(page, /className="context-menu app-menu"/);
+  assert.match(page, /Новая группа/);
+  assert.match(page, /Связанные устройства/);
+  assert.match(page, /ContextMenu\.Root/);
+  assert.match(page, /message-context-menu/);
+  assert.doesNotMatch(page, /ChevronDown/);
+  assert.match(lock, /\.app-menu/);
+  assert.match(lock, /\.message-context-menu/);
+});
+
 test("parity lock prevents known visual regressions", () => {
   assert.match(lock, /\.title-row\.normal-title\s*\{\s*display: none;/s);
   assert.match(lock, /\.setting-section \+ \.setting-section\s*\{\s*display: none;/s);
   assert.match(lock, /\.chat-list-search\.mobile-search-collapsed\s*\{\s*display: flex;/s);
   assert.match(lock, /inbox-header:has\(\.chats-main-title\)/);
   assert.match(lock, /messenger-shell\[data-accent="blue"\]/);
+  assert.doesNotMatch(page, /Palette/);
 });
 
 test("visual parity still does not claim unavailable network features", () => {

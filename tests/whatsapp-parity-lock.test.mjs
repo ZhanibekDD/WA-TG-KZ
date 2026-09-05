@@ -36,6 +36,11 @@ test("Favorites are distinct from starred messages and exposed as a chat action"
   assert.match(page, /act\("favorite"\)/);
   assert.match(page, /Добавить в избранное/);
   assert.match(page, /Убрать из избранного/);
+  assert.match(page, /toggleStar/);
+  assert.match(page, /type: "star"/);
+  assert.match(page, /message\.starred/);
+  assert.match(page, /selfThread/);
+  assert.doesNotMatch(page, /function toSaved/);
 });
 
 test("New chat keeps the WhatsApp select-contact hierarchy on mobile", () => {

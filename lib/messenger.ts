@@ -68,10 +68,18 @@ export function createDemoState(): MessengerState {
 export function selectThreads(state: MessengerState, filter: Filter, query: string, archived: boolean, locale: Locale): Thread[] {
   const search = query.trim().toLocaleLowerCase();
   return state.threads.filter(t => {
-    if (t.archived !== archived || (t.kind === "channel" && !t.following)) return false;
+    if (t.archived !== archived) return false;
+
+    // WhatsApp keeps channels in Updates rather than mixing them with Chats.
+    // The internal "channels" filter is retained for the Updates surface only.
+    if (t.kind === "channel") {
+      if (filter !== "channels" || !t.following) return false;
+    } else if (filter === "channels") {
+      return false;
+    }
+
     if (filter === "unread" && !t.unread) return false;
     if (filter === "groups" && t.kind !== "group") return false;
-    if (filter === "channels" && t.kind !== "channel") return false;
     return !search || localize(t.name, locale).toLocaleLowerCase().includes(search) || (state.messages[t.id] ?? []).some(m => localize(m.body, locale).toLocaleLowerCase().includes(search));
   }).sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.order - a.order);
 }

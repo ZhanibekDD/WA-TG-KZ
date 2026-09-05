@@ -8,6 +8,7 @@ import "./whatsapp-strict-2026.css";
 import "./qazyna-brand.css";
 import "./product-teal.css";
 import "./jeli-stories.css";
+import "./jeli-logo-lock.css";
 
 export const metadata: Metadata = {
   title: "JELI — мессенджер",

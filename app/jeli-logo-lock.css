@@ -1,6 +1,6 @@
 /* Approved JELI logo must win over generic accent backgrounds. */
 .wordmark-icon {
-  background: url('/jeli-icon.png') center / cover no-repeat !important;
+  background: url('/jeli-icon.svg') center / cover no-repeat !important;
   color: transparent !important;
   box-shadow: none !important;
 }

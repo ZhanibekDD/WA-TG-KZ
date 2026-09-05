@@ -13,12 +13,11 @@ test("JELI manifest uses the final blended teal palette and icon", () => {
   assert.equal(manifest.icons[0].type, "image/svg+xml");
 });
 
-test("Bot Studio and Stories are discoverable platform shortcuts", () => {
+test("Stories remain a shortcut while bot creation stays inside BotJeli chat", () => {
   assert.ok(Array.isArray(manifest.shortcuts));
-  const bots = manifest.shortcuts.find(shortcut => shortcut.url === "/bots");
   const stories = manifest.shortcuts.find(shortcut => shortcut.url === "/stories");
-  assert.ok(bots);
+  const bots = manifest.shortcuts.find(shortcut => shortcut.url === "/bots");
   assert.ok(stories);
-  assert.equal(bots.name, "Bot Studio");
   assert.equal(stories.name, "Stories");
+  assert.equal(bots, undefined);
 });

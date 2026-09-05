@@ -22,10 +22,14 @@ body,
   font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-/* Direct contacts in the real app do not expose prototype labels under their
-   name. Group/channel/self subtitles stay available where they carry meaning. */
-.chat-identity:has(.avatar.small:not(:has(svg))) small {
+/* Prototype-only direct-contact subtitles must not leak into the WhatsApp
+   surface. Groups/channels/self can still expose their informative subtitle. */
+.chat-identity small {
   display: none;
+}
+
+.chat-identity:has(.avatar.small > svg) small {
+  display: block;
 }
 
 /* Message bubbles use a compact WhatsApp tail rather than generic cards. */
@@ -48,9 +52,43 @@ body,
   border-right: 6px solid transparent;
 }
 
+/* Select-contact has different search copy from the main chats search. Keep
+   the data model untouched and render the correct visual placeholder here. */
+.new-chat-search {
+  position: relative;
+}
+
 .new-chat-search input,
 .new-chat-search input::placeholder {
   font-weight: 400;
+}
+
+.new-chat-search input::placeholder {
+  color: transparent;
+}
+
+.new-chat-search::after {
+  position: absolute;
+  left: 16px;
+  bottom: 13px;
+  color: #667781;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20px;
+  pointer-events: none;
+}
+
+html[lang="ru"] .new-chat-search::after {
+  content: "Поиск по имени или номеру";
+}
+
+html[lang="kk"] .new-chat-search::after {
+  content: "Аты немесе нөмірі бойынша іздеу";
+}
+
+.new-chat-search:focus-within::after,
+.new-chat-search:has(input:not(:placeholder-shown))::after {
+  display: none;
 }
 
 /* Keep the interaction density close to WhatsApp Web. */

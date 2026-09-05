@@ -40,7 +40,7 @@ test("web manifest describes JELI without claiming an offline implementation", (
   assert.match(manifest.name, /мессенджер/);
   assert.equal(manifest.lang, "ru");
   assert.ok(manifest.icons.length > 0);
-  assert.equal(manifest.icons[0].src, "/jeli-icon.png");
+  assert.equal(manifest.icons[0].src, "/jeli-icon.svg");
 });
 
 test("demo does not silently request devices, upload attachments, or fake delivery", () => {

@@ -1,81 +1,154 @@
-# Qazyna: WhatsApp-parity first, platform second
+# JELI Product Roadmap
 
-## Решение владельца
+## Product rule
 
-Создать собственный мессенджер для рынка Казахстана. Первый пользовательский слой должен быть максимально привычным для человека, который уже пользуется WhatsApp: та же логика основных экранов, сопоставимая геометрия, плотность, расположение действий и порядок сценариев.
+JELI combines familiar messenger interaction patterns rather than inventing a new navigation system:
+- Chats and conversation UX stay WhatsApp-like in density and placement;
+- Stories use Telegram-like compact presence above Chats and a dark full-screen viewer;
+- bot creation and management happen inside **BotJeli**, like BotFather, not in a standalone dashboard;
+- JELI keeps its own name, logo and teal green×blue identity.
 
-Qazyna остаётся самостоятельным продуктом со своим названием, логотипом, инфраструктурой и кодом. На этапе visual parity не добавлять альтернативные темы, собственную навигацию, социальную ленту, каталог услуг, маркетплейс или государственные сервисы.
+## Stage 0 — interaction baseline
 
-После достижения привычности можно постепенно добавлять более сильные возможности Telegram, не ломая базовую модель WhatsApp.
+Done in current prototype:
+- mobile and desktop Chats;
+- search, archive, All / Unread / Favorites / Groups;
+- 1:1 and group conversation surfaces;
+- reply/edit/delete/star/context menu;
+- Message Yourself;
+- Channels separated from personal Chats;
+- New Chat hierarchy;
+- Calls/Communities/Updates shells;
+- compact Stories rail above Chats;
+- dark full-screen Stories viewer;
+- JELI branding and round logo;
+- BotJeli system conversation.
 
-## Продуктовая структура
+## Stage 1 — real messenger vertical slice
 
-| Зона | Базовое ожидание |
-|---|---|
-| Чаты | Личные сообщения, группы, поиск, архив, закрепления, непрочитанные |
-| Переписка | Текст, голосовые, фото/видео/файлы, ответы, редактирование, понятные статусы доставки |
-| Обновления | Статусы и каналы |
-| Сообщества | Организация связанных групп |
-| Звонки | Аудио, видео, история звонков и ссылки на звонки |
-| Настройки | RU/қазақша, приватность, устройства, уведомления, аккаунт |
-| Избранное | Собственные заметки и сохранённые сообщения |
+Goal: two real accounts can exchange persistent messages.
 
-## Этапы и критерии готовности
+1. phone registration / verification;
+2. user identity and sessions;
+3. contacts / username lookup;
+4. server-side conversations and messages;
+5. realtime transport;
+6. idempotent sending;
+7. reconnect/offline queue;
+8. sent / delivered / read states;
+9. message reactions;
+10. push notifications.
 
-| Этап | Результат | Критерий перехода |
-|---|---|---|
-| 0. Visual parity — текущий | Интерфейс не воспринимается как «generic messenger» и визуально следует утверждённому WhatsApp-эталону | Контрольные экраны приняты на 390×844 и 1440×900; ключевые размеры/позиции не расходятся с baseline более чем примерно на 4 px |
-| 1. Настоящий личный чат | Регистрация по телефону, сессия устройства, серверное хранение, realtime | Два реальных аккаунта на разных устройствах обмениваются сообщениями; reconnect и retry не теряют сообщения и не создают дубли |
-| 2. Повседневный чат | Контакты, группы, фото/видео/документы, delivery/read, push | 99%+ тестовых сообщений доходят в заданном SLA; нет критических потерь данных; группы и медиа работают на плохой сети |
-| 3. Голос | Запись/отправка голосовых и стабильное воспроизведение | Отправка, пауза/продолжение, фоновые сценарии и плохая сеть проверены на Android/iOS |
-| 4. Звонки | 1:1 аудио/видео, затем групповые звонки | Есть измеряемое качество соединения, reconnect, управление разрешениями и корректное завершение вызовов |
-| 5. Multi-device + E2EE | Несколько устройств, ключи, шифрование сообщений/медиа, восстановление | Протокол и lifecycle ключей описаны, протестированы и прошли независимый security review |
-| 6. Telegram-level power | Каналы, расширенные группы, большие файлы, инструменты авторов и админов | Расширение не ухудшает простоту основного WhatsApp-подобного сценария |
-| 7. Казахстанская платформа | Локальные интеграции и сервисы только после доказанной ежедневной полезности мессенджера | Стабильная активная аудитория и инфраструктура выдерживают рост без деградации core messaging |
+Acceptance: two devices exchange messages and reactions, survive reconnect/reload and show honest delivery state.
 
-## Visual parity gate
+## Stage 2 — media and voice
 
-До перехода к backend-разработке должны быть приняты минимум:
+- image/video/file upload;
+- thumbnails and download lifecycle;
+- voice-note recording/playback;
+- video messages later;
+- media permissions and storage quotas.
 
-- список чатов;
-- личная переписка;
-- групповая переписка;
-- Обновления;
-- Сообщества;
-- Звонки;
-- Настройки;
-- создание нового чата.
+## Stage 3 — calls
 
-Контрольные размеры и правила: [WHATSAPP_PARITY_ACCEPTANCE.md](WHATSAPP_PARITY_ACCEPTANCE.md).
+Order:
+1. WebRTC audio 1:1;
+2. WebRTC video 1:1;
+3. STUN/TURN and reconnect behavior;
+4. incoming/outgoing/ringing/missed states;
+5. group audio calls;
+6. group video calls;
+7. screen sharing;
+8. device selection and network-quality UI.
 
-После принятия baseline любой PR, меняющий UI, должен проверяться хотя бы на 390×844 и 1440×900. Следующая автоматизация — screenshot regression, чтобы дизайн не «уплывал» обратно.
+Do not display a call as connected until real signaling/media paths exist.
 
-## Архитектурный принцип
+## Stage 4 — Stories
 
-Не строить сразу весь WhatsApp. Делать вертикальными срезами:
+Current prototype already validates UX. Production slice:
+1. account-backed media upload;
+2. story publishing;
+3. 6 / 12 / 24 / 48 hour expiry;
+4. privacy enforcement: Everyone / Contacts / Close Friends / Selected;
+5. viewer list;
+6. reactions;
+7. replies delivered to chat;
+8. archive;
+9. profile-pinned stories;
+10. moderation/reporting.
 
-`регистрация → контакт → чат → сообщение → доставка → восстановление после разрыва`
+## Stage 5 — BotJeli / Bot API
 
-Только когда этот путь надёжен, добавлять группы, медиа, голос, звонки и multi-device. Такой порядок быстрее приводит к реально работающему продукту, чем одновременная разработка десятков экранов без устойчивой доставки.
+Primary bot management UX remains inside the **BotJeli chat**.
 
-## Безопасность и независимость
+Current local prototype:
+- `/newbot`;
+- guided name → username flow;
+- username retry without losing bot name;
+- local `jeli_demo_...` token;
+- `/mybots`;
+- `/help`.
 
-До использования для чувствительной переписки обязателен отдельный security-поток:
+Production slice:
+1. real owner account;
+2. server-issued bot token;
+3. `getMe` equivalent;
+4. bot receives message via signed webhook;
+5. bot sends reply;
+6. callbacks/buttons;
+7. token rotate/revoke;
+8. permission scopes;
+9. rate limits;
+10. audit logs.
 
-- threat model регистрации, восстановления, устройств, сообщений, групп и медиа;
-- защищённое управление сессиями и отзыв устройств;
-- авторизация каждого ресурса на сервере;
-- rate limits, антиспам, жалобы и блокировки;
-- проектирование E2EE и жизненного цикла ключей до заявления о сквозном шифровании;
-- независимый аудит;
-- решение по размещению серверов, медиа, резервных копий и журналов;
-- отдельный анализ зависимости от SMS, push, DNS, CDN и app stores;
-- проверка требований Казахстана к персональным данным профильными специалистами.
+Advanced configuration may open as a Mini App from BotJeli, but not replace the chat-first UX.
 
-Своя марка не равна технологической независимости. Независимость появляется только тогда, когда контролируются код, ключи, данные, инфраструктура, поставщики и процесс обновлений.
+## Stage 6 — groups, channels, communities
 
-## Что не делать сейчас
+- large groups;
+- roles/admin permissions;
+- topics/forums;
+- polls/quizzes;
+- channel publishing;
+- comments/discussion groups;
+- community containers;
+- moderation and anti-spam.
 
-Не добавлять «красивые уникальные фишки» в основной UI до visual acceptance. Не добавлять платежи, мини-приложения, рекомендательную ленту и маркетплейс до доказанной надёжности core messaging. Не рисовать фальшивые «доставлено», «в сети», активные звонки или обещания E2EE, пока реального backend/device/security пути нет.
+## Stage 7 — Mini Apps
 
-Ближайший результат после visual parity: два настоящих аккаунта на двух устройствах стабильно обмениваются сообщениями и восстанавливают переписку после потери связи.
+- signed init data;
+- JELI theme/safe-area API;
+- full-screen and compact modes;
+- chat context;
+- storage;
+- payments sandbox;
+- deep links;
+- app directory/verification later.
+
+## Stage 8 — AI and business
+
+- AI bots;
+- knowledge/RAG;
+- translation;
+- voice transcription;
+- chat summaries;
+- business inbox;
+- CRM tags and assignments;
+- auto-replies;
+- human handoff;
+- no-code Flow Builder;
+- payments/subscriptions.
+
+## Non-negotiable security boundary
+
+Until actually implemented and reviewed, JELI must not claim:
+- real E2EE;
+- real device delivery;
+- production bot tokens;
+- production Stories privacy enforcement;
+- real calls;
+- real payment processing.
+
+## North-star acceptance
+
+A new user should understand basic JELI messaging without learning a new UI. A Telegram/WhatsApp user should immediately know how to open a chat, send a message, view a Story and interact with BotJeli.

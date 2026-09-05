@@ -38,7 +38,7 @@ const scopeOptions = [
 ] as const;
 
 const normalizeUsername = (value: string) => value.trim().replace(/^@/, "").replace(/[^a-zA-Z0-9_]/g, "").slice(0, 32);
-const makeDemoToken = () => `qz_demo_${crypto.randomUUID().replaceAll("-", "")}`;
+const makeDemoToken = () => `jeli_demo_${crypto.randomUUID().replaceAll("-", "")}`;
 
 export default function BotStudioPage() {
   const [bots, setBots] = useState<BotDraft[]>([]);
@@ -98,7 +98,7 @@ export default function BotStudioPage() {
 
   return <main className="bot-studio-shell">
     <header className="bot-studio-header">
-      <Link className="bot-studio-back" href="/"><ChevronLeft />Qazyna</Link>
+      <Link className="bot-studio-back" href="/"><ChevronLeft />JELI</Link>
       <div>
         <strong><Bot />Bot Studio</strong>
         <span>Создание и управление чат-ботами</span>
@@ -122,9 +122,9 @@ export default function BotStudioPage() {
 
       <section className="bot-studio-main">
         {creating ? <div className="bot-create-card">
-          <div className="bot-studio-kicker"><Sparkles />Qazyna Bot Platform</div>
+          <div className="bot-studio-kicker"><Sparkles />JELI Bot Platform</div>
           <h1>Создайте чат-бота</h1>
-          <p>В Qazyna бот создаётся через понятную форму. Позже те же действия будут доступны внутри системного <strong>@QazynaBot</strong> — кнопками и командами.</p>
+          <p>В JELI бот создаётся через понятную форму. Позже те же действия будут доступны внутри системного <strong>@JELIBot</strong> — кнопками и командами.</p>
           <form onSubmit={createBot} className="bot-create-form">
             <label>Название<Input value={name} onChange={event => setName(event.target.value)} maxLength={64} placeholder="Например, ZakonExpert Assistant" required /></label>
             <label>Username<div className="bot-username-field"><span>@</span><Input value={username} onChange={event => setUsername(normalizeUsername(event.target.value))} minLength={4} maxLength={32} placeholder="zakonexpert_bot" required /></div></label>
@@ -155,14 +155,14 @@ export default function BotStudioPage() {
 
             <section className="bot-panel">
               <h2><Webhook />Webhook</h2>
-              <Input value={selected.webhook} onChange={event => patchSelected({ webhook: event.target.value })} placeholder="https://example.kz/qazyna/webhook" />
+              <Input value={selected.webhook} onChange={event => patchSelected({ webhook: event.target.value })} placeholder="https://example.kz/jeli/webhook" />
               <small>HTTPS endpoint для событий сообщений, кнопок, оплат и системных обновлений.</small>
             </section>
 
             <section className="bot-panel">
               <h2><Sparkles />Mini App</h2>
               <Input value={selected.miniApp} onChange={event => patchSelected({ miniApp: event.target.value })} placeholder="https://app.example.kz" />
-              <small>Полноэкранное приложение внутри Qazyna: магазин, CRM, сервис, игра или AI-интерфейс.</small>
+              <small>Полноэкранное приложение внутри JELI: магазин, CRM, сервис, игра или AI-интерфейс.</small>
             </section>
 
             <section className="bot-panel bot-permissions">

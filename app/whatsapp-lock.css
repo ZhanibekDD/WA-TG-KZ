@@ -1,0 +1,25 @@
+/* Lock visual parity to the WhatsApp reference instead of allowing the old
+   prototype theme controls to drift the interface away from the benchmark. */
+.messenger-shell,
+.messenger-shell[data-accent="blue"],
+.messenger-shell[data-accent="green"] {
+  --primary: var(--wa-green);
+  --ring: var(--wa-green);
+  --accent: var(--wa-chip-active);
+  --accent-foreground: var(--wa-green-strong);
+  --chat-paper: var(--wa-chat);
+  --outgoing: var(--wa-outgoing);
+}
+
+/* The current WhatsApp chat list does not repeat a separate "Chats" heading
+   below the top app bar. Keep the h1 in the DOM for semantics/tests, but do
+   not render that duplicate row. The archive view still gets its back row. */
+.title-row.normal-title {
+  display: none;
+}
+
+/* The previous prototype exposed green/blue appearance presets. Visual-parity
+   mode has one product palette, so hide that obsolete customization section. */
+.setting-section + .setting-section {
+  display: none;
+}

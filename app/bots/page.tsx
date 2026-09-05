@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import { Bot, Check, ChevronLeft, Clipboard, Code2, KeyRound, Plus, RefreshCw, Save, ShieldCheck, Sparkles, Store, Webhook, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -97,7 +98,7 @@ export default function BotStudioPage() {
 
   return <main className="bot-studio-shell">
     <header className="bot-studio-header">
-      <a className="bot-studio-back" href="/"><ChevronLeft />Qazyna</a>
+      <Link className="bot-studio-back" href="/"><ChevronLeft />Qazyna</Link>
       <div>
         <strong><Bot />Bot Studio</strong>
         <span>Создание и управление чат-ботами</span>

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   formatDetection: { telephone: false },
   other: { "codex-preview": "development" },
-  icons: { icon: "/jeli-icon.png", shortcut: "/jeli-icon.png", apple: "/jeli-icon.png" },
+  icons: { icon: "/jeli-icon.svg", shortcut: "/jeli-icon.svg", apple: "/jeli-icon.svg" },
 };
 
 export const viewport: Viewport = { themeColor: "#18b5ad", width: "device-width", initialScale: 1, viewportFit: "cover" };

@@ -11,14 +11,14 @@ import { contacts, createDemoState, localize, MAX_ATTACHMENT_BYTES, MAX_MESSAGE_
 import { messengerCopy, type MessengerCopy } from "@/lib/messenger-copy";
 
 type View = "chats" | "updates" | "communities" | "calls" | "settings";
-type Modal = "new" | "about" | "call" | "voice" | "info" | "status" | "view-status" | null;
+type Modal = "new" | "about" | "call" | "voice" | "info" | "status" | "view-status" | "starred" | null;
 type Draft = { text: string; replyTo?: string; editing?: string; attachment?: Attachment };
 const emptyDraft: Draft = { text: "" };
 const clock = (at: string) => new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Almaty" }).format(new Date(at));
 const uid = () => crypto.randomUUID();
 
 function Avatar({ chat, small = false }: { chat: Pick<Thread, "initials" | "color" | "kind">; small?: boolean }) {
-  const Icon = chat.kind === "group" ? UsersRound : chat.kind === "saved" ? Bookmark : chat.kind === "channel" ? Megaphone : null;
+  const Icon = chat.kind === "group" ? UsersRound : chat.kind === "saved" ? CircleUserRound : chat.kind === "channel" ? Megaphone : null;
   return <span aria-hidden="true" className={cn("avatar", small && "small")} style={{ background: chat.color }}>{Icon ? <Icon /> : chat.initials}</span>;
 }
 
@@ -84,6 +84,7 @@ export default function HomePage() {
   const searchContacts = contacts.filter(contact => contact.name.toLocaleLowerCase().includes(contactQuery.toLocaleLowerCase()));
   const replyMessage = messages.find(message => message.id === draft.replyTo);
   const selfThread = state.threads.find(chat => chat.id === "saved")!;
+  const starredMessages = state.threads.flatMap(chat => (state.messages[chat.id] ?? []).filter(message => message.starred).map(message => ({ chat, message }))).sort((a, b) => new Date(b.message.at).getTime() - new Date(a.message.at).getTime());
   const communitiesLabel = locale === "ru" ? "Сообщества" : "Қауымдастықтар";
   const viewLabels: Record<View, string> = { chats: t.chats, updates: t.updates, communities: communitiesLabel, calls: t.calls, settings: t.settings };
   const viewLabel = viewLabels[view];
@@ -121,6 +122,14 @@ export default function HomePage() {
     setSearchOpen(false);
     setMessageQuery("");
     dispatch({ type: "read", chatId: id });
+  }
+  function openStarredMessage(chatId: string) {
+    setModal(null);
+    setView("chats");
+    setArchived(false);
+    setFilter("all");
+    setQuery("");
+    openChat(chatId);
   }
   function switchView(next: View) {
     setView(next);
@@ -220,7 +229,6 @@ export default function HomePage() {
   }
 
   const linkedDevicesNotice = locale === "ru" ? "Связанные устройства появятся после подключения реальных аккаунтов и сессий." : "Байланыстырылған құрылғылар нақты аккаунттар мен сессиялар қосылғаннан кейін пайда болады.";
-  const starredNotice = locale === "ru" ? "Список избранных сообщений появится здесь после подключения постоянного хранения." : "Таңдаулы хабарламалар тізімі тұрақты сақтау қосылғаннан кейін осында пайда болады.";
   const newContactNotice = locale === "ru" ? "Создание настоящего контакта подключим вместе с адресной книгой устройства." : "Нақты контакт жасау құрылғының мекенжай кітабы қосылғанда іске қосылады.";
 
   return <main className={cn("messenger-shell", opened && "conversation-open-mobile")} data-accent="green">
@@ -244,7 +252,7 @@ export default function HomePage() {
                 <DropdownMenu.Portal><DropdownMenu.Content className="context-menu app-menu" align="end" sideOffset={4}>
                   <MenuItem action={newGroup}>{locale === "ru" ? "Новая группа" : "Жаңа топ"}</MenuItem>
                   <MenuItem action={() => setNotice(linkedDevicesNotice)}>{locale === "ru" ? "Связанные устройства" : "Байланыстырылған құрылғылар"}</MenuItem>
-                  <MenuItem action={() => setNotice(starredNotice)}>{locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар"}</MenuItem>
+                  <MenuItem action={() => setModal("starred")}>{locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар"}</MenuItem>
                   <MenuItem action={() => switchView("settings")}>{t.settings}</MenuItem>
                 </DropdownMenu.Content></DropdownMenu.Portal>
               </DropdownMenu.Root>
@@ -290,7 +298,7 @@ export default function HomePage() {
         <div className="settings-profile"><span className="avatar profile"><CircleUserRound /></span><div><strong>{t.me}</strong><small>{t.profileHint}</small></div></div>
         <section className="setting-section"><h2><Languages />{t.language}</h2><div className="segmented" role="group" aria-label={t.language}><button className={locale === "ru" ? "active" : ""} onClick={() => setLocale("ru")} aria-pressed={locale === "ru"}>Русский</button><button className={locale === "kk" ? "active" : ""} onClick={() => setLocale("kk")} aria-pressed={locale === "kk"}>Қазақша</button></div></section>
         <button className="settings-row" onClick={() => setModal("about")}><Shield /><span>{t.privacy}</span><ChevronRight /></button>
-        <button className="settings-row" onClick={() => setNotice(starredNotice)}><Star /><span>{locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар"}</span><ChevronRight /></button>
+        <button className="settings-row" onClick={() => setModal("starred")}><Star /><span>{locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар"}</span><ChevronRight /></button>
         <button className="settings-row" onClick={() => setModal("about")}><Info /><span>{t.help}</span><ChevronRight /></button>
       </div>}
       <button className="demo-footer" onClick={() => setModal("about")}><Info /><span>{t.demoShort}</span></button>
@@ -360,13 +368,14 @@ export default function HomePage() {
     <nav className="mobile-nav" aria-label={t.typeHint}>{nav.map(item => <button className={cn(view === item.id && "active")} onClick={() => switchView(item.id)} aria-current={view === item.id ? "page" : undefined} key={item.id}><span><item.icon />{item.id === "chats" && unread > 0 && <b>{unread}</b>}</span><small>{item.label}</small></button>)}</nav>
 
     <Dialog.Root open={modal !== null} onOpenChange={value => { if (!value) setModal(null); }}>
-      <Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className={cn("modal-content", modal === "view-status" && "status-modal", modal === "new" && "new-chat-modal")} onOpenAutoFocus={() => { modalOpener.current = document.activeElement as HTMLElement | null; }} onCloseAutoFocus={e => { e.preventDefault(); if (modalOpener.current?.getClientRects().length) modalOpener.current.focus(); else composeRef.current?.focus(); }}>
-        <Dialog.Title>{modal === "new" ? newKind === "group" ? t.newGroup : t.newChat : modal === "call" ? t.notReadyTitle : modal === "voice" ? t.voice : modal === "info" ? localize(active.name, locale) : modal === "status" ? t.myStatus : modal === "view-status" ? viewedStatus?.name : t.demoTitle}</Dialog.Title>
-        <Dialog.Description>{modal === "new" ? newKind === "group" ? t.groupHint : locale === "ru" ? "Выберите контакт, чтобы начать переписку." : "Хат алмасуды бастау үшін контактіні таңдаңыз." : modal === "call" ? t.notReadyHint : modal === "voice" ? t.voiceHint : modal === "info" ? infoText : modal === "status" || modal === "view-status" ? t.statusHint : t.demoHint}</Dialog.Description>
+      <Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className={cn("modal-content", modal === "view-status" && "status-modal", modal === "new" && "new-chat-modal", modal === "starred" && "starred-modal")} onOpenAutoFocus={() => { modalOpener.current = document.activeElement as HTMLElement | null; }} onCloseAutoFocus={e => { e.preventDefault(); if (modalOpener.current?.getClientRects().length) modalOpener.current.focus(); else composeRef.current?.focus(); }}>
+        <Dialog.Title>{modal === "new" ? newKind === "group" ? t.newGroup : t.newChat : modal === "call" ? t.notReadyTitle : modal === "voice" ? t.voice : modal === "info" ? localize(active.name, locale) : modal === "status" ? t.myStatus : modal === "view-status" ? viewedStatus?.name : modal === "starred" ? (locale === "ru" ? "Избранные сообщения" : "Таңдаулы хабарламалар") : t.demoTitle}</Dialog.Title>
+        <Dialog.Description>{modal === "new" ? newKind === "group" ? t.groupHint : locale === "ru" ? "Выберите контакт, чтобы начать переписку." : "Хат алмасуды бастау үшін контактіні таңдаңыз." : modal === "call" ? t.notReadyHint : modal === "voice" ? t.voiceHint : modal === "info" ? infoText : modal === "status" || modal === "view-status" ? t.statusHint : modal === "starred" ? (locale === "ru" ? `${starredMessages.length} сохранено` : `${starredMessages.length} сақталды`) : t.demoHint}</Dialog.Description>
         <Dialog.Close asChild><Button variant="ghost" size="icon" className="icon-button modal-close" aria-label={t.close}>{modal === "new" ? <ArrowLeft /> : <X />}</Button></Dialog.Close>
         {modal === "about" && <div className="modal-body"><p>{t.demoDetails}</p><h3><Shield />{t.privacy}</h3><p>{t.privacyHint}</p></div>}
         {modal === "voice" && <div className="modal-body"><Button className="primary-button" onClick={() => { setModal(null); fileRef.current?.click(); }}><Paperclip />{t.attachment}</Button></div>}
         {modal === "info" && <div className="modal-body info-body"><Avatar chat={active} /><p>{messages.length} {t.messageCount}</p>{active.members && <ul className="member-list"><li>{t.you}</li>{active.members.map(id => <li key={id}>{contacts.find(person => person.id === id)?.name ?? id}</li>)}</ul>}<p>{t.demoShort}</p></div>}
+        {modal === "starred" && <div className="modal-body starred-list">{starredMessages.length ? starredMessages.map(({ chat, message }) => <button type="button" key={`${chat.id}:${message.id}`} onClick={() => openStarredMessage(chat.id)}><Avatar chat={chat} small /><span><strong>{localize(chat.name, locale)}</strong><small>{textFor(message)}</small></span><time dateTime={message.at}>{clock(message.at)}</time></button>) : <div className="starred-empty"><Star /><p>{locale === "ru" ? "Помечайте важные сообщения звёздочкой, чтобы быстро находить их здесь." : "Маңызды хабарламаларды осында тез табу үшін жұлдызшамен белгілеңіз."}</p></div>}</div>}
         {modal === "new" && <div className="modal-body new-chat-body">
           {newKind === "direct" ? <>
             <div className="new-chat-shortcuts">

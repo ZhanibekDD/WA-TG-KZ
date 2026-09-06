@@ -1,0 +1,34 @@
+/* Final JELI chat wallpaper. Only the message history receives the branded pattern. */
+.chat-panel {
+  background: #f5fbfa;
+}
+
+.chat-wallpaper {
+  background-color: #f7fcfb !important;
+  background-image: url('/jeli-chat-wallpaper.svg') !important;
+  background-size: auto 100% !important;
+  background-position: center top !important;
+  background-repeat: repeat-x !important;
+}
+
+/* Keep message surfaces comfortably readable over the richer wallpaper. */
+.message-bubble {
+  backdrop-filter: blur(.2px);
+}
+
+.day-divider span {
+  box-shadow: 0 1px 3px #0b3b4212;
+}
+
+@media (max-width: 899px) {
+  .chat-wallpaper {
+    background-size: auto 100% !important;
+    background-position: center top !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .message-bubble {
+    backdrop-filter: none;
+  }
+}

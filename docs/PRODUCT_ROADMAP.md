@@ -1,51 +1,154 @@
-# Qazyna: сначала привычный мессенджер
+# JELI Product Roadmap
 
-## Решение владельца
+## Product rule
 
-Создать собственный продукт для рынка Казахстана с привычными сценариями WhatsApp и возможностями Telegram. Не выводить на первый экран социальную ленту, каталог услуг, маркетплейс или государственные сервисы.
+JELI combines familiar messenger interaction patterns rather than inventing a new navigation system:
+- Chats and conversation UX stay WhatsApp-like in density and placement;
+- Stories use Telegram-like compact presence above Chats and a dark full-screen viewer;
+- bot creation and management happen inside **BotJeli**, like BotFather, not in a standalone dashboard;
+- JELI keeps its own name, logo and teal green×blue identity.
 
-Дизайн должен узнаваемо работать, но не выдавать Qazyna за приложение другой компании. Зелёная и голубая темы используют одну навигацию, а не два разных продукта.
+## Stage 0 — interaction baseline
 
-## Продуктовая структура
+Done in current prototype:
+- mobile and desktop Chats;
+- search, archive, All / Unread / Favorites / Groups;
+- 1:1 and group conversation surfaces;
+- reply/edit/delete/star/context menu;
+- Message Yourself;
+- Channels separated from personal Chats;
+- New Chat hierarchy;
+- Calls/Communities/Updates shells;
+- compact Stories rail above Chats;
+- dark full-screen Stories viewer;
+- JELI branding and round logo;
+- BotJeli system conversation.
 
-| Зона | Что пользователь ожидает |
-|---|---|
-| Чаты | Личные сообщения, группы, поиск, архив, закрепления |
-| Переписка | Текст, голосовые, фото и файлы, цитаты, понятная доставка |
-| Обновления | Статусы и подписки на каналы без рекомендательной ленты |
-| Звонки | Аудио, видео и достоверная история звонков |
-| Настройки | RU/қазақша, приватность, устройства, уведомления |
-| Избранное | Собственные заметки и сохранённые сообщения |
+## Stage 1 — real messenger vertical slice
 
-Ориентиры для знакомых сценариев: [фильтры чатов WhatsApp](https://blog.whatsapp.com/find-messages-faster-with-chat-filters), [папки, архив и закрепления Telegram](https://telegram.org/blog/folders), [каналы Telegram](https://telegram.org/faq#q-what-are-channels). Полная функциональная совместимость с этими сервисами не заявляется.
+Goal: two real accounts can exchange persistent messages.
 
-## Этапы и критерии готовности
+1. phone registration / verification;
+2. user identity and sessions;
+3. contacts / username lookup;
+4. server-side conversations and messages;
+5. realtime transport;
+6. idempotent sending;
+7. reconnect/offline queue;
+8. sent / delivered / read states;
+9. message reactions;
+10. push notifications.
 
-| Этап | Результат | Критерий перехода |
-|---|---|---|
-| Прототип — текущий | Привычный интерфейс и локальные сценарии без серверной доставки | Проверить на телефонах: человек без подсказки находит контакт и составляет сообщение; целевой ориентир — 10 секунд |
-| Рабочий личный чат | Аккаунты, разрешённые контакты, хранение, realtime-доставка | Два устройства обмениваются сообщениями; перезагрузка, потеря связи и повторная отправка не теряют сообщения и не создают дубли |
-| Закрытый пилот | Группы, медиа, push, блокировки, жалобы, антиспам | Измеряются доставка, сбои, возвраты и обращения; устранены критические дефекты |
-| Надёжное повседневное общение | Запись голоса, звонки, несколько устройств, восстановление | Проверены плохая сеть, смена устройства, конфликты синхронизации, расход батареи |
-| Подготовка к расширению | Каналы, инструменты авторов и управления группами | Подтверждены повторное использование и готовность инфраструктуры |
+Acceptance: two devices exchange messages and reactions, survive reconnect/reload and show honest delivery state.
 
-Сроки, бюджет, город пилота и численность аудитории пока не согласованы. Целевые показатели не являются достигнутыми результатами.
+## Stage 2 — media and voice
 
-## Безопасность и независимость
+- image/video/file upload;
+- thumbnails and download lifecycle;
+- voice-note recording/playback;
+- video messages later;
+- media permissions and storage quotas.
 
-Отдельный обязательный поток работ до использования для чувствительной переписки:
+## Stage 3 — calls
 
-- выбрать проверенный протокол сквозного шифрования и спроектировать управление ключами, восстановление и несколько устройств;
-- описать угрозы, защиту регистрации и восстановления аккаунта, лимиты и отзыв сессий;
-- проверить права доступа к каждому сообщению, группе и вложению на сервере;
-- провести независимый аудит и устранить найденные проблемы;
-- согласовать расположение основного сервера, медиа, резервных копий и журналов; отдельно проверить SMS, push, DNS и обновления;
-- согласовать требования к персональным данным с профильными специалистами.
+Order:
+1. WebRTC audio 1:1;
+2. WebRTC video 1:1;
+3. STUN/TURN and reconnect behavior;
+4. incoming/outgoing/ringing/missed states;
+5. group audio calls;
+6. group video calls;
+7. screen sharing;
+8. device selection and network-quality UI.
 
-Своя марка и интерфейс сами по себе не означают независимость. Потребуются контролируемые инфраструктура, ключи, поставщики и эксплуатация. Текущий прототип не реализует этот контур.
+Do not display a call as connected until real signaling/media paths exist.
 
-## Что не делать сейчас
+## Stage 4 — Stories
 
-Не добавлять общий каталог услуг, алгоритмическую ленту, платежи или мини-приложения до проверки основного общения. Не рисовать фальшивые «доставлено», «в сети», показатели аудитории или обещания шифрования.
+Current prototype already validates UX. Production slice:
+1. account-backed media upload;
+2. story publishing;
+3. 6 / 12 / 24 / 48 hour expiry;
+4. privacy enforcement: Everyone / Contacts / Close Friends / Selected;
+5. viewer list;
+6. reactions;
+7. replies delivered to chat;
+8. archive;
+9. profile-pinned stories;
+10. moderation/reporting.
 
-Ближайший выбор после проверки интерфейса — инфраструктура и регистрация для настоящего чата между двумя телефонами. Настройка платных провайдеров и публикация требуют отдельного согласования.
+## Stage 5 — BotJeli / Bot API
+
+Primary bot management UX remains inside the **BotJeli chat**.
+
+Current local prototype:
+- `/newbot`;
+- guided name → username flow;
+- username retry without losing bot name;
+- local `jeli_demo_...` token;
+- `/mybots`;
+- `/help`.
+
+Production slice:
+1. real owner account;
+2. server-issued bot token;
+3. `getMe` equivalent;
+4. bot receives message via signed webhook;
+5. bot sends reply;
+6. callbacks/buttons;
+7. token rotate/revoke;
+8. permission scopes;
+9. rate limits;
+10. audit logs.
+
+Advanced configuration may open as a Mini App from BotJeli, but not replace the chat-first UX.
+
+## Stage 6 — groups, channels, communities
+
+- large groups;
+- roles/admin permissions;
+- topics/forums;
+- polls/quizzes;
+- channel publishing;
+- comments/discussion groups;
+- community containers;
+- moderation and anti-spam.
+
+## Stage 7 — Mini Apps
+
+- signed init data;
+- JELI theme/safe-area API;
+- full-screen and compact modes;
+- chat context;
+- storage;
+- payments sandbox;
+- deep links;
+- app directory/verification later.
+
+## Stage 8 — AI and business
+
+- AI bots;
+- knowledge/RAG;
+- translation;
+- voice transcription;
+- chat summaries;
+- business inbox;
+- CRM tags and assignments;
+- auto-replies;
+- human handoff;
+- no-code Flow Builder;
+- payments/subscriptions.
+
+## Non-negotiable security boundary
+
+Until actually implemented and reviewed, JELI must not claim:
+- real E2EE;
+- real device delivery;
+- production bot tokens;
+- production Stories privacy enforcement;
+- real calls;
+- real payment processing.
+
+## North-star acceptance
+
+A new user should understand basic JELI messaging without learning a new UI. A Telegram/WhatsApp user should immediately know how to open a chat, send a message, view a Story and interact with BotJeli.

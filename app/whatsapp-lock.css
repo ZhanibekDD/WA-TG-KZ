@@ -1,0 +1,561 @@
+/* Lock visual parity to the WhatsApp reference instead of allowing the old
+   prototype controls to drift the interface away from the benchmark. */
+.messenger-shell,
+.messenger-shell[data-accent="blue"],
+.messenger-shell[data-accent="green"] {
+  --primary: var(--wa-green);
+  --ring: var(--wa-green);
+  --accent: var(--wa-chip-active);
+  --accent-foreground: var(--wa-green-strong);
+  --chat-paper: var(--wa-chat);
+  --outgoing: var(--wa-outgoing);
+  --wa-hover: #f5f6f6;
+}
+
+/* Prototype disclosure stays reachable from About/Settings and delivery
+   notices, but it must not permanently distort the WhatsApp layout. */
+.demo-footer,
+.chat-demo-note {
+  display: none !important;
+}
+
+.title-row.normal-title {
+  display: none;
+}
+
+.setting-section + .setting-section {
+  display: none;
+}
+
+.app-menu {
+  min-width: 224px;
+  padding: 7px 0;
+  border-radius: 8px;
+}
+
+.app-menu .menu-item {
+  min-height: 43px;
+  padding: 10px 20px;
+  color: var(--wa-text);
+  font-size: 14px;
+}
+
+.message-bubble {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.message-context-menu {
+  min-width: 205px;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px #0b141a30;
+}
+
+.message-context-menu .menu-item {
+  min-height: 42px;
+  padding: 9px 12px;
+}
+
+.message-meta .message-star {
+  width: 11px;
+  height: 11px;
+  color: var(--wa-secondary);
+}
+
+/* Starred messages are a separate WhatsApp surface. They point back to the
+   original conversation; starring never copies a message into the self chat. */
+.starred-modal {
+  width: min(520px, calc(100vw - 32px));
+  padding-bottom: 18px;
+}
+
+.starred-list {
+  margin: 16px -10px -8px;
+  color: var(--wa-text);
+}
+
+.starred-list > button {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.starred-list > button:hover {
+  background: var(--wa-hover);
+}
+
+.starred-list > button > span:nth-child(2) {
+  min-width: 0;
+}
+
+.starred-list strong,
+.starred-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.starred-list strong {
+  color: var(--wa-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.starred-list small {
+  margin-top: 4px;
+  color: var(--wa-secondary);
+  font-size: 12px;
+}
+
+.starred-list time {
+  align-self: start;
+  padding-top: 3px;
+  color: var(--wa-secondary);
+  font-size: 11px;
+}
+
+.starred-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 260px;
+  padding: 40px 24px;
+  color: var(--wa-secondary);
+  text-align: center;
+}
+
+.starred-empty svg {
+  width: 38px;
+  height: 38px;
+  stroke-width: 1.5;
+}
+
+.starred-empty p {
+  max-width: 300px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+/* Select contact follows the WhatsApp hierarchy: actions first, then the
+   contacts list. On desktop it remains a dialog; mobile turns it into a full
+   screen route-like surface. */
+.new-chat-modal {
+  width: min(500px, calc(100vw - 32px));
+}
+
+.new-chat-shortcuts {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -8px 18px;
+}
+
+.new-chat-shortcuts > button {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.new-chat-shortcuts > button:hover {
+  background: var(--wa-hover);
+}
+
+.new-chat-shortcuts strong {
+  color: var(--wa-text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.new-chat-action-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 50%;
+  background: var(--wa-green);
+  color: #fff;
+}
+
+.new-chat-action-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
+}
+
+.new-chat-search {
+  margin-top: 0;
+  color: var(--wa-green-strong);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.new-chat-search input {
+  margin-top: 9px;
+}
+
+.whatsapp-contact-picker {
+  margin-top: 6px;
+}
+
+.whatsapp-contact-picker > button {
+  min-height: 64px;
+}
+
+/* Updates keeps Status and Channels visually separate. The horizontal status
+   tray mirrors the compact Android layout used when channels are present. */
+.updates-list {
+  padding-top: 2px;
+}
+
+.updates-list > .section-heading:first-child {
+  padding: 9px 16px 2px;
+}
+
+.updates-list > .status-row {
+  display: inline-flex;
+  width: 88px;
+  min-height: 104px;
+  vertical-align: top;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 8px 5px 13px;
+  text-align: center;
+}
+
+.updates-list > .status-row:hover {
+  background: transparent;
+}
+
+.updates-list > .status-row .status-ring {
+  width: 58px;
+  height: 58px;
+  flex-basis: 58px;
+  padding: 3px;
+}
+
+.updates-list > .status-row .status-ring > svg {
+  width: 48px;
+  height: 48px;
+}
+
+.updates-list > .status-row .avatar.small {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+}
+
+.updates-list > .status-row > span:last-child {
+  width: 100%;
+}
+
+.updates-list > .status-row strong,
+.updates-list > .status-row small {
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.updates-list > .status-row strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.updates-list > .status-row small {
+  display: none;
+}
+
+.updates-list > .section-divider {
+  margin: 2px 0 7px;
+  height: 8px;
+}
+
+.updates-list > .section-heading:not(:first-child) {
+  min-height: 44px;
+  padding: 6px 17px 3px;
+}
+
+.updates-list > .section-heading h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.updates-list > .section-description {
+  margin: 2px 17px 11px;
+  color: var(--wa-secondary) !important;
+  font-size: 12px;
+}
+
+.updates-list .channel-discover {
+  min-height: 66px;
+  padding: 8px 14px;
+}
+
+.updates-list .subscribe-small {
+  min-width: 82px;
+  border-radius: 18px;
+  background: var(--wa-chip-active);
+  color: var(--wa-green-strong);
+  font-weight: 600;
+}
+
+/* Honest empty-state versions of Communities and Calls use WhatsApp spacing
+   without inventing fake memberships or call history. */
+.communities-empty,
+.calls-empty {
+  align-items: flex-start;
+  gap: 0;
+  padding: 24px 20px 32px;
+  text-align: left;
+  color: var(--wa-secondary);
+}
+
+.communities-empty .empty-icon,
+.calls-empty .empty-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 0 18px;
+  border-radius: 50%;
+  background: var(--wa-chip-active);
+  color: var(--wa-green-strong);
+}
+
+.communities-empty .empty-icon svg,
+.calls-empty .empty-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.communities-empty strong,
+.calls-empty strong {
+  color: var(--wa-text);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.communities-empty p,
+.calls-empty p {
+  max-width: 330px;
+  margin: 8px 0 18px;
+  color: var(--wa-secondary) !important;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.communities-empty .primary-button,
+.calls-empty .primary-button {
+  width: auto;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.communities-empty > small,
+.calls-empty > small {
+  display: none;
+}
+
+/* WhatsApp does not show an overflow button on every chat row. Desktop keeps
+   it as a hover affordance for this prototype; mobile uses the chat header. */
+@media (min-width: 900px) {
+  .conversation-row .row-menu {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .conversation-row:hover .row-menu,
+  .conversation-row:focus-within .row-menu {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 899px) {
+  .conversation-row .row-menu {
+    display: none;
+  }
+
+  .chat-list-search.mobile-search-collapsed {
+    display: flex;
+  }
+
+  .inbox-header:has(.chats-main-title) .top-search-action {
+    display: none;
+  }
+
+  .inbox-header:has(.chats-main-title) {
+    padding-bottom: 0;
+  }
+
+  .chat-list-search {
+    margin-top: 0;
+  }
+
+  .app-menu {
+    min-width: 236px;
+  }
+
+  .message-context-menu {
+    min-width: 218px;
+    border-radius: 14px;
+    box-shadow: 0 10px 34px #0b141a38;
+  }
+
+  .new-chat-modal,
+  .starred-modal {
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    top: 0;
+    transform: none;
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    padding: max(17px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .new-chat-modal > h2,
+  .starred-modal > h2 {
+    flex: 0 0 auto;
+    min-height: 48px;
+    margin: 0 42px 0 44px;
+    display: flex;
+    align-items: center;
+    color: var(--wa-text);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .new-chat-modal > p,
+  .starred-modal > p {
+    margin-left: 44px;
+    color: var(--wa-secondary);
+    font-size: 12px;
+  }
+
+  .new-chat-modal > p {
+    display: none;
+  }
+
+  .new-chat-modal .modal-close,
+  .starred-modal .modal-close {
+    left: 4px;
+    right: auto;
+    top: max(11px, env(safe-area-inset-top));
+  }
+
+  .starred-modal .modal-close svg {
+    transform: rotate(0deg);
+  }
+
+  .starred-list {
+    flex: 1;
+    min-height: 0;
+    margin: 8px -8px -8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .starred-list > button {
+    min-height: 70px;
+    border-radius: 0;
+  }
+
+  .new-chat-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    margin-top: 8px;
+    color: var(--wa-text);
+  }
+
+  .new-chat-shortcuts {
+    flex: 0 0 auto;
+    margin: 0 -4px 12px;
+  }
+
+  .new-chat-shortcuts > button {
+    min-height: 62px;
+    padding: 7px 4px;
+    border-radius: 0;
+  }
+
+  .new-chat-action-icon {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .new-chat-search {
+    flex: 0 0 auto;
+  }
+
+  .new-chat-search input {
+    height: 44px;
+    border-radius: 22px;
+    background: var(--wa-panel);
+    border-color: transparent;
+    padding-inline: 16px;
+  }
+
+  .whatsapp-contact-picker,
+  .new-group-form .contact-picker {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    margin-bottom: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .whatsapp-contact-picker > button,
+  .new-group-form .contact-checkbox {
+    min-height: 66px;
+    padding: 7px 2px;
+  }
+
+  .updates-list > .section-heading:first-child {
+    padding-top: 5px;
+  }
+
+  .updates-list > .status-row {
+    width: 86px;
+  }
+
+  .communities-empty,
+  .calls-empty {
+    padding: 22px 18px 28px;
+  }
+
+  .communities-empty p,
+  .calls-empty p {
+    max-width: 300px;
+  }
+}

@@ -16,6 +16,7 @@ import "./jeli-logo-lock.css";
 import "./botjeli-lock.css";
 import "./jeli-messenger-lock.css";
 import "./jeli-interactions.css";
+import "./jeli-chat-wallpaper.css";
 
 export const metadata: Metadata = {
   title: "JELI — мессенджер",

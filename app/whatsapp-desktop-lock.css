@@ -1,0 +1,105 @@
+/* Desktop-only parity pass for the current WhatsApp Web shell.
+   Mobile stays controlled by whatsapp-parity.css + whatsapp-lock.css. */
+@media (min-width: 900px) {
+  /* Chats header: WhatsApp Web uses the section title with New chat + More.
+     The shared mobile app-bar controls remain in the DOM but are suppressed. */
+  .inbox-header:has(.chats-main-title) {
+    min-height: 60px;
+    padding: 10px 12px 8px 16px;
+  }
+
+  .inbox-header:has(.chats-main-title) .brand-row {
+    position: absolute;
+    top: 10px;
+    right: 7px;
+    z-index: 4;
+    min-height: 40px;
+    line-height: 40px;
+  }
+
+  .inbox-header:has(.chats-main-title) .brand-row > span {
+    display: none;
+  }
+
+  .inbox-header:has(.chats-main-title) .title-row.normal-title {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    margin: 0;
+  }
+
+  .inbox-header:has(.chats-main-title) .title-row.normal-title h1 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 40px;
+    font-weight: 600;
+  }
+
+  .inbox-header:has(.chats-main-title) .whatsapp-list-actions > .icon-button:first-child,
+  .inbox-header:has(.chats-main-title) .top-search-action {
+    display: none;
+  }
+
+  /* Reuse the real New chat FAB as the WhatsApp Web header action so its
+     behavior remains correct instead of drawing a fake icon. */
+  .inbox-panel:has(.chats-main-title) .new-chat-fab {
+    top: 10px;
+    right: 49px;
+    bottom: auto;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    color: #54656f;
+    box-shadow: none;
+  }
+
+  .inbox-panel:has(.chats-main-title) .new-chat-fab:hover,
+  .inbox-panel:has(.chats-main-title) .new-chat-fab:focus-visible {
+    background: #e9edef;
+    color: var(--wa-text);
+  }
+
+  .inbox-panel:has(.chats-main-title) .new-chat-fab svg {
+    width: 21px;
+    height: 21px;
+    stroke-width: 1.8;
+  }
+
+  .inbox-panel:has(.chats-main-title) .chat-list-search {
+    margin-top: 0;
+  }
+
+  /* WhatsApp Web keeps the conversation toolbar compact and vertically
+     centered while allowing the identity block to take the remaining width. */
+  .chat-header {
+    min-height: 60px;
+  }
+
+  .chat-header-actions .icon-button {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .chat-history {
+    padding-left: clamp(36px, 7vw, 96px);
+    padding-right: clamp(36px, 7vw, 96px);
+  }
+
+  .composer {
+    min-height: 56px;
+    padding: 6px 10px;
+  }
+
+  .message-input {
+    min-height: 42px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .messenger-shell {
+    grid-template-columns: 64px 400px minmax(0, 1fr);
+  }
+}

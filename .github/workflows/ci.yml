@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: TypeScript
+        run: npx tsc --noEmit --incremental false
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Tests
+        run: node --experimental-strip-types --test tests/*.test.mjs
+
+  visual-capture:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Playwright CLI and Chromium
+        run: |
+          npm install -g @playwright/cli@latest
+          playwright-cli install-browser --with-deps
+
+      - name: Start production server
+        run: |
+          nohup npm run start -- --port 3000 --hostname 127.0.0.1 > /tmp/jeli-server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/jeli-server.log
+          exit 1
+
+      - name: Capture mobile messenger screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: jeli-mobile-390
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 390x844
+        run: |
+          mkdir -p visual-artifacts
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli screenshot --filename=visual-artifacts/01-chats-390x844.png
+          playwright-cli click 'role=button[name="Айгерим"]'
+          playwright-cli screenshot --filename=visual-artifacts/02-chat-390x844.png
+          playwright-cli click 'role=button[name="Назад"]'
+          playwright-cli click 'role=button[name="Новый чат"]'
+          playwright-cli screenshot --filename=visual-artifacts/03-new-chat-390x844.png
+          playwright-cli click 'role=button[name="Закрыть"]'
+          playwright-cli click 'role=button[name="Обновления"]'
+          playwright-cli screenshot --filename=visual-artifacts/04-updates-390x844.png
+          playwright-cli click 'role=button[name="Звонки"]'
+          playwright-cli screenshot --filename=visual-artifacts/05-calls-390x844.png
+          playwright-cli close
+
+      - name: Capture mobile 412 messenger screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: jeli-mobile-412
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 412x915
+        run: |
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli screenshot --filename=visual-artifacts/06-chats-412x915.png
+          playwright-cli click 'role=button[name="Айгерим"]'
+          playwright-cli screenshot --filename=visual-artifacts/07-chat-412x915.png
+          playwright-cli close
+
+      - name: Capture desktop messenger screen
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: jeli-desktop-1440
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 1440x900
+        run: |
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli screenshot --filename=visual-artifacts/08-desktop-1440x900.png
+          playwright-cli close
+
+      - name: Capture BotJeli inside messenger
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+        run: |
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open http://127.0.0.1:3000/
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile playwright-cli click 'role=button[name="BotJeli"]'
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile playwright-cli screenshot --filename=visual-artifacts/09-botjeli-chat-390x844.png
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-mobile playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open http://127.0.0.1:3000/
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop playwright-cli click 'role=button[name="BotJeli"]'
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop playwright-cli screenshot --filename=visual-artifacts/10-botjeli-chat-1440x900.png
+          PLAYWRIGHT_CLI_SESSION=jeli-bot-desktop playwright-cli close
+
+      - name: Capture Stories screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+        run: |
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-mobile PLAYWRIGHT_MCP_VIEWPORT_SIZE=390x844 playwright-cli open 'http://127.0.0.1:3000/stories?story=sample-aigerim'
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-mobile playwright-cli screenshot --filename=visual-artifacts/11-stories-390x844.png
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-mobile playwright-cli close
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop PLAYWRIGHT_MCP_VIEWPORT_SIZE=1440x900 playwright-cli open 'http://127.0.0.1:3000/stories?story=sample-aigerim'
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop playwright-cli screenshot --filename=visual-artifacts/12-stories-1440x900.png
+          PLAYWRIGHT_CLI_SESSION=jeli-stories-desktop playwright-cli close
+
+      - name: Capture reactions and call screens
+        env:
+          PLAYWRIGHT_MCP_HEADLESS: "true"
+          PLAYWRIGHT_MCP_OUTPUT_DIR: visual-artifacts
+          PLAYWRIGHT_CLI_SESSION: jeli-interactions-mobile
+          PLAYWRIGHT_MCP_VIEWPORT_SIZE: 390x844
+        run: |
+          playwright-cli open http://127.0.0.1:3000/
+          playwright-cli click 'role=button[name="Айгерим"]'
+          playwright-cli click 'role=button[name="Добавить реакцию 1"]'
+          playwright-cli click 'role=menuitem[name="Поставить ❤️"]'
+          playwright-cli screenshot --filename=visual-artifacts/13-message-reaction-390x844.png
+          playwright-cli click 'role=button[name="Видеозвонок"]'
+          playwright-cli screenshot --filename=visual-artifacts/14-video-call-390x844.png
+          playwright-cli click 'role=button[name="Завершить звонок"]'
+          playwright-cli click 'role=button[name="Назад"]'
+          playwright-cli click 'role=button[name="Семья"]'
+          playwright-cli click 'role=button[name="Аудиозвонок"]'
+          playwright-cli screenshot --filename=visual-artifacts/15-group-audio-call-390x844.png
+          playwright-cli close
+
+      - name: Upload visual captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: jeli-ui-screenshots
+          path: visual-artifacts/*.png
+          if-no-files-found: error
+          retention-days: 14

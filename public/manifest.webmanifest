@@ -1,0 +1,20 @@
+{
+  "name": "JELI — мессенджер и платформа",
+  "short_name": "JELI",
+  "description": "Чаты, Stories, сообщества, каналы, боты и Mini Apps",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f8f7",
+  "theme_color": "#18b5ad",
+  "lang": "ru",
+  "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }],
+  "shortcuts": [
+    {
+      "name": "Stories",
+      "short_name": "Stories",
+      "description": "Истории JELI",
+      "url": "/stories",
+      "icons": [{ "src": "/jeli-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

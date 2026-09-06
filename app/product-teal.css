@@ -1,0 +1,198 @@
+/* Final product color system: a deliberate WhatsApp-green × Telegram-blue blend.
+   Geometry remains owned by the parity layers; this file owns color only. */
+
+:root {
+  --qz-primary: #18b5ad;
+  --qz-primary-strong: #0b8f99;
+  --qz-primary-bright: #22c7b9;
+  --qz-sky: #229ed9;
+  --qz-green: #25c978;
+  --qz-primary-soft: #e7f8f6;
+  --qz-primary-soft-2: #d9f4ef;
+  --qz-chat: #f1f8f7;
+  --qz-panel: #f5faf9;
+  --qz-border: #d9ebe8;
+  --qz-text: #102625;
+  --qz-secondary: #607775;
+
+  --wa-green: var(--qz-primary);
+  --wa-green-strong: var(--qz-primary-strong);
+  --wa-green-bright: var(--qz-primary-bright);
+  --wa-chip-active: var(--qz-primary-soft);
+  --wa-chat: var(--qz-chat);
+  --wa-outgoing: var(--qz-primary-soft-2);
+  --wa-panel: var(--qz-panel);
+  --wa-border: var(--qz-border);
+  --wa-text: var(--qz-text);
+  --wa-secondary: var(--qz-secondary);
+
+  --primary: var(--qz-primary);
+  --ring: var(--qz-primary);
+  --accent: var(--qz-primary-soft);
+  --accent-foreground: var(--qz-primary-strong);
+  --chat-paper: var(--qz-chat);
+  --outgoing: var(--qz-primary-soft-2);
+}
+
+body {
+  background: #e8f2f0;
+  color: var(--qz-text);
+}
+
+.brand-row {
+  color: var(--qz-primary-strong);
+}
+
+/* Replace the old prototype wordmark without touching messenger geometry. */
+.brand-row > span:first-child {
+  font-size: 0 !important;
+  background: none !important;
+  color: transparent !important;
+}
+.brand-row > span:first-child::after {
+  content: "JELI";
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+  background: linear-gradient(110deg, var(--qz-green), var(--qz-sky));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wordmark-icon {
+  overflow: hidden;
+  font-size: 0 !important;
+  background-image: url('/jeli-icon.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+.welcome-panel h2 {
+  font-size: 0 !important;
+}
+.welcome-panel h2::after {
+  content: "JELI";
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+
+.wordmark-icon,
+.new-chat-fab,
+.primary-button,
+.send-button,
+.mic-button,
+.status-plus,
+.new-chat-action-icon,
+.bot-avatar,
+.bot-studio-sidebar-title button,
+.bot-primary-action {
+  background: linear-gradient(135deg, var(--qz-green), var(--qz-sky)) !important;
+  color: #fff !important;
+}
+
+.filter-chip.active,
+.mobile-nav .active > span,
+.subscribe-small,
+.communities-empty .empty-icon,
+.calls-empty .empty-icon,
+.bot-list-item.active,
+.bot-avatar.new,
+.bot-studio-badge {
+  background: var(--qz-primary-soft) !important;
+  color: var(--qz-primary-strong) !important;
+}
+
+.unread-badge,
+.mobile-nav b {
+  background: linear-gradient(135deg, var(--qz-primary-bright), var(--qz-sky)) !important;
+}
+
+.archive-row svg,
+.message-sender,
+.reply-quote strong,
+.status-ring.has-status,
+.new-chat-search,
+.bot-studio-back,
+.bot-studio-kicker,
+.bot-panel h2 svg,
+.bot-token-row button {
+  color: var(--qz-primary-strong) !important;
+}
+
+.status-ring.has-status {
+  border-color: var(--qz-primary) !important;
+}
+
+.reply-quote {
+  border-left-color: var(--qz-primary) !important;
+}
+
+.chat-panel,
+.chat-wallpaper {
+  background-color: var(--qz-chat) !important;
+}
+
+.chat-wallpaper {
+  background-image:
+    radial-gradient(circle at 10px 10px, #18b5ad0b 1px, transparent 1.4px),
+    radial-gradient(circle at 34px 26px, #229ed90a 1px, transparent 1.4px),
+    linear-gradient(35deg, transparent 48%, #25c97807 49%, #25c97807 51%, transparent 52%),
+    linear-gradient(-35deg, transparent 48%, #229ed907 49%, #229ed907 51%, transparent 52%);
+  background-size: 46px 46px, 46px 46px, 62px 62px, 62px 62px;
+}
+
+.outgoing .message-bubble {
+  background: var(--qz-primary-soft-2) !important;
+}
+
+.outgoing .message-bubble::before {
+  border-top-color: var(--qz-primary-soft-2) !important;
+}
+
+.message-star {
+  color: var(--qz-primary-strong) !important;
+}
+
+.bot-studio-shell {
+  background: #f1f8f7 !important;
+}
+
+.bot-list-item:hover,
+.bot-token-row {
+  background: #f2f9f8 !important;
+}
+
+.bot-kind-grid button.active {
+  border-color: #8edbd5 !important;
+  background: var(--qz-primary-soft) !important;
+  color: var(--qz-primary-strong) !important;
+}
+
+.bot-security-note {
+  border-color: #bde7e2 !important;
+  background: #f0fbf9 !important;
+}
+
+.bot-status {
+  background: #edf7f5 !important;
+}
+
+.bot-permissions label:has(input:checked) {
+  border-color: #9edfd9 !important;
+  background: var(--qz-primary-soft) !important;
+  color: var(--qz-primary-strong) !important;
+}
+
+.bot-permissions input {
+  accent-color: var(--qz-primary) !important;
+}
+
+::selection {
+  background: #bfece7;
+  color: var(--qz-text);
+}

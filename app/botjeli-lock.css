@@ -1,0 +1,9 @@
+/* BotJeli stays inside the normal messenger UI and behaves like a BotFather-class system chat. */
+.chat-panel[aria-label="BotJeli"] .chat-identity small{font-size:0}.chat-panel[aria-label="BotJeli"] .chat-identity small::after{content:"Системный бот";font-size:11px;color:var(--wa-secondary)}
+.chat-panel[aria-label="BotJeli"] .chat-identity strong::after{content:"✓";display:inline-grid;place-items:center;width:14px;height:14px;margin-left:5px;border-radius:50%;background:linear-gradient(135deg,#20c878,#229ed9);color:#fff;font-size:9px;vertical-align:1px}
+.chat-panel[aria-label="BotJeli"] .chat-header-actions>.audio-call,.chat-panel[aria-label="BotJeli"] .chat-header-actions>.header-divider,.chat-panel[aria-label="BotJeli"] .chat-header-actions>button:first-child{display:none!important}
+.chat-panel[aria-label="BotJeli"] .chat-identity .avatar{background:linear-gradient(135deg,#20c878,#229ed9)!important;color:#fff;font-size:18px}
+.chat-panel[aria-label="BotJeli"] .message-row:not(.outgoing) .message-bubble{border:1px solid #d8ebe8;box-shadow:0 1px 1px #0b3b4210}
+.chat-panel[aria-label="BotJeli"] .composer{border-top-color:#d9ebe8}
+.botjeli-command-bar{display:flex;gap:6px;overflow-x:auto;padding:7px 10px 2px;background:var(--wa-panel);scrollbar-width:none}.botjeli-command-bar::-webkit-scrollbar{display:none}.botjeli-command-bar button{flex:0 0 auto;min-height:32px;padding:0 12px;border:1px solid #b9dfdc;border-radius:999px;background:#fff;color:#087f86;font-size:12px;font-weight:650}.botjeli-command-bar button:active{background:#e5f7f5}.chat-panel[aria-label="BotJeli"] .keyboard-hint{display:none}
+@media(max-width:899px){.botjeli-command-bar{padding-inline:8px}.botjeli-command-bar button{min-height:34px;font-size:11px}}

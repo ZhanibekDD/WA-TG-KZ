@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="JELI">
+  <defs>
+    <linearGradient id="bg" x1="28" y1="26" x2="228" y2="230" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#20dd79"/>
+      <stop offset="0.45" stop-color="#13c3bd"/>
+      <stop offset="1" stop-color="#167df0"/>
+    </linearGradient>
+    <radialGradient id="shade" cx="0" cy="0" r="1" gradientTransform="translate(113 126) rotate(35) scale(113)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#064c52" stop-opacity=".96"/>
+      <stop offset=".58" stop-color="#073f58" stop-opacity=".66"/>
+      <stop offset="1" stop-color="#0b3e75" stop-opacity=".08"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="62" y1="58" x2="204" y2="202" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset=".55" stop-color="#eafffb"/>
+      <stop offset="1" stop-color="#bfefff"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="124" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="118" fill="url(#shade)"/>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#83fff2" stroke-opacity=".72" stroke-width="2"/>
+  <g filter="url(#glow)" fill="none" stroke="url(#mark)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M178 70C154 53 121 49 94 60C64 73 45 101 46 133C47 157 58 176 76 190L62 215L91 200C116 211 145 209 168 195C195 179 211 151 208 121" stroke-width="22"/>
+  </g>
+  <path d="M151 94L213 67L195 132L180 108L151 94Z" fill="url(#mark)" filter="url(#glow)"/>
+  <path d="M158 95L198 78L181 108Z" fill="#d8f8ff" opacity=".82"/>
+</svg>
